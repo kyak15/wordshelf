@@ -67,3 +67,21 @@ export async function addNewBookController(
     res.status(500).json({ error: "Failed to add book" });
   }
 }
+
+export async function getWordsFromBookController(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const { id } = req.params;
+    const words = await libraryService.getWordsFromBook(req.user.user_id, id);
+    res.json(words);
+  } catch (error) {
+    console.error("Error getting words from book:", error);
+    res.status(500).json({ error: "Failed to fetch words from book" });
+  }
+}

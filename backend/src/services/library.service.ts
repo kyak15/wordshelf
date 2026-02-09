@@ -188,4 +188,38 @@ export const libraryService = {
       client.release();
     }
   },
+  async getWordsFromBook(userId: string, libraryBookId: string) {
+    const res = await pool.query(
+      `SELECT
+        bsw.saved_word_id,
+        bsw.user_id,
+        bsw.library_book_id,
+        bsw.word_id,
+        bsw.chosen_sense_id,
+        bsw.page_number,
+        bsw.chapter,
+        bsw.context_snippet,
+        bsw.saved_at,
+        bsw.is_archived,
+        bsw.mastery_level,
+        bsw.last_reviewed_at,
+        bsw.next_review_at,
+        bsw.interval_days,
+        bsw.ease_factor,
+        bsw.saved_definition,
+        bsw.saved_part_of_speech,
+        bsw.saved_example,
+        bsw.saved_audio_url,
+        w.text,
+        w.lemma,
+        w.language_code
+       FROM book_saved_words bsw
+       JOIN words w ON w.word_id = bsw.word_id
+       WHERE bsw.user_id = $1 AND bsw.library_book_id = $2
+       ORDER BY bsw.saved_at DESC`,
+      [userId, libraryBookId]
+    );
+
+    return res.rows;
+  },
 };
