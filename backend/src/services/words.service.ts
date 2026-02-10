@@ -30,6 +30,7 @@ const SAVED_WORD_FROM = `
   JOIN words w ON w.word_id = bsw.word_id`;
 
 export const wordsService = {
+  //TODO: add limit filtering to this
   async getAllWords(
     userId: string,
     filters?: {

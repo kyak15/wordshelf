@@ -26,12 +26,29 @@ export type AuthProvider = "google" | "apple" | "email";
 // User
 // ============================================================
 
+/**
+ * User returned from GET /auth/me
+ * Note: created_at and updated_at are NOT returned by the API
+ */
 export interface User {
   user_id: string;
   email: string | null;
   display_name: string | null;
-  created_at: string;
-  updated_at: string;
+}
+
+// ============================================================
+// Auth Responses
+// ============================================================
+
+export interface AuthResult {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface AuthError {
+  error: string;
 }
 
 // ============================================================
@@ -94,7 +111,15 @@ export interface DictionarySense {
 // Saved Words (User's vocabulary)
 // ============================================================
 
-export interface SavedWord {
+/**
+ * SavedWordRow - The ACTUAL response from the backend API
+ * This is a FLAT structure that includes word fields directly
+ * Returned by: GET /api/words, GET /api/words/:id, POST /api/words,
+ *              PUT /api/words/:id, PATCH /api/words/:id/review,
+ *              GET /api/library/library/:id/words
+ */
+export interface SavedWordRow {
+  // Saved word fields
   saved_word_id: string;
   user_id: string;
   library_book_id: string;
@@ -114,13 +139,10 @@ export interface SavedWord {
   saved_part_of_speech: string | null;
   saved_example: string | null;
   saved_audio_url: string | null;
-}
-
-export interface SavedWordWithDetails extends SavedWord {
-  word: Word;
-  book?: Book;
-  library_book?: LibraryBook;
-  chosen_sense?: DictionarySense;
+  // Word fields (flattened from words table join)
+  text: string;
+  lemma: string | null;
+  language_code: string;
 }
 
 // ============================================================
@@ -205,4 +227,52 @@ export interface UpdateWordInput {
 
 export interface SubmitReviewInput {
   quality: number; // 0-5 (SM-2 scale)
+}
+
+// ============================================================
+// Stats Responses
+// ============================================================
+
+export interface BooksByStatus {
+  planned: number;
+  reading: number;
+  paused: number;
+  finished: number;
+  abandoned: number;
+}
+
+export interface WordsByMasteryLevel {
+  0: number;
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+}
+
+export interface OverviewStats {
+  books: {
+    total: number;
+    by_status: BooksByStatus;
+  };
+  words: {
+    total: number;
+    archived: number;
+    by_mastery_level: WordsByMasteryLevel;
+    due_for_review: number;
+  };
+}
+
+export interface ActivityPoint {
+  date: string; // YYYY-MM-DD format
+  count: number;
+}
+
+// ============================================================
+// Health Response
+// ============================================================
+
+export interface HealthStatus {
+  status: "ok";
+  timestamp: string;
 }

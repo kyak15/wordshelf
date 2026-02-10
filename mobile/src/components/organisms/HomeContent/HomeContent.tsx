@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useTheme } from "../../../theme";
 import { SectionHeader, Spacer } from "../../atoms";
 import { BookCard } from "../../molecules";
+import RecentlySavedWordsCard from "../../molecules/RecentlySavedWordsCard/RecentlySavedWords";
 
 // Mock data - replace with real data fetching later
 const MOCK_CURRENTLY_READING = {
@@ -40,7 +41,7 @@ export const HomeContent: React.FC = () => {
       />
       <SectionHeader title="Recently Saved Words" />
       <Spacer size="sm" />
-      
+      <RecentlySavedWordsCard />
     </ScrollView>
   );
 };

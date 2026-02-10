@@ -6,3 +6,4 @@ export { BookThumbnail } from "./BookThumbnail";
 export { BookCardInfo } from "./BookCardInfo";
 export { ProgressBar } from "./ProgressBar";
 export { BookCardProgress } from "./BookCardProgress";
+export { LoadingSpinner } from "./LoadingSpinner";

@@ -1,17 +1,21 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 
 interface SimpleWordCardProps {
   word: string;
-  definition: string;
+  definition: string | null;
 }
 
 export default function SimpleWordCard({
   word,
   definition,
 }: SimpleWordCardProps) {
-  <View style={styles.container}>
-    {word} - {definition}
-  </View>;
+  return (
+    <View style={styles.container}>
+      <Text>
+        {word} - {definition ?? "No definition"}
+      </Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

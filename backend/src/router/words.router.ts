@@ -18,6 +18,6 @@ wordsRouter.get("/", getAllWordsController); // list all words (with filters)
 wordsRouter.get("/review", getDueWordsController); // get words due for flashcard review
 wordsRouter.get("/:id", getSingleWordController); // get a single word's details
 wordsRouter.post("/", addNewWordController); // add a new word
-wordsRouter.patch("/:id", updateWordController); // edit a word
+wordsRouter.put("/:id", updateWordController); // edit a word
 wordsRouter.delete("/:id", deleteWordController); // delete a word
 wordsRouter.patch("/:id/review", updateFlashcardReviewController); // submit flashcard review result
