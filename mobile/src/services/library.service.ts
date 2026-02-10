@@ -1,14 +1,13 @@
+import { LibraryBook } from "../types";
 import { apiClient } from "./api";
 
 export const libraryService = {
-  // Get all books in user's library
   async getBooks(): Promise<LibraryBook[]> {
     const response = await apiClient.get<LibraryBook[]>("/library");
     if (response.error) throw new Error(response.error);
     return response.data!;
   },
 
-  // Add a book to library
   async addBook(bookData: {
     title: string;
     author: string;
@@ -18,7 +17,6 @@ export const libraryService = {
     return response.data!;
   },
 
-  // Update reading status
   async updateStatus(
     libraryBookId: string,
     status: string

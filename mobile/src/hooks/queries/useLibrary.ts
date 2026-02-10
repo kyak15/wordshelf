@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { libraryService } from "../../services/library.service";
 
-// Hook to GET the user's books
 export function useLibraryBooks() {
   return useQuery({
     queryKey: ["library", "books"],
@@ -11,7 +10,6 @@ export function useLibraryBooks() {
   });
 }
 
-// Hook to ADD a book (mutation)
 export function useAddBook() {
   const queryClient = useQueryClient();
 
@@ -26,4 +24,13 @@ export function useAddBook() {
   });
 }
 
-//TODO Implement useUpdateBook?
+//TODO Implement useUpdateBook
+// export function useUpdateBook() {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: () => libraryService.updateBook(bookData),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ["library", "books"] });
+//     },
+//   });
+// }

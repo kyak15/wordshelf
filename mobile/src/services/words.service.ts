@@ -1,3 +1,4 @@
+import { CreateWordInput, SavedWord, UpdateWordInput, Word } from "../types";
 import { apiClient } from "./api";
 
 interface GetWordsOptions {
@@ -7,6 +8,13 @@ interface GetWordsOptions {
   search?: string;
 }
 
+/**
+ * wordsService Notes
+ *
+ * 1) Error Handling
+ * - apiClient returns obj with data or error; doesn't throw on failure
+ * - crucial since RQ expects promise to reject (throw) when something goes wrong
+ */
 export const wordsService = {
   async getAllWords(options: GetWordsOptions = {}): Promise<Word[]> {
     const params = new URLSearchParams();
@@ -30,10 +38,25 @@ export const wordsService = {
     if (response.error) throw new Error(response.error);
     return response.data!;
   },
-  async getSingleWord(bookId: string) {
-    const response = await apiClient.get<Word>(`/words/${wordId}`);
+  async getSingleWord(wordId: string) {
+    const response = await apiClient.get<SavedWord>(`/words/${wordId}`);
     if (response.error) throw new Error(response.error);
     return response.data!;
   },
-  //TODO: Add Post, Patches, and Delete services
+  async addNewWord(newWord: CreateWordInput) {
+    const response = await apiClient.post("/words", newWord);
+    if (response.error) throw new Error(response.error);
+    return response.data!;
+  },
+  async updateWord(wordId: string, updateWord: UpdateWordInput) {
+    const response = await apiClient.put(`/word/${wordId}`, updateWord);
+    if (response.error) throw new Error(response.error);
+    return response.data!;
+  },
+  async deleteWord(wordId: string) {
+    const response = await apiClient.delete(`/word/${wordId}`);
+    if (response.error) throw new Error(response.error);
+    return response.data!;
+  },
+  //TODO: Need to update API service on flashcard review and update
 };
