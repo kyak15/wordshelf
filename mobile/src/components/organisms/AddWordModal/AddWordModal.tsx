@@ -3,7 +3,7 @@ import {
   View,
   StyleSheet,
   Modal,
-  FlatList,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
   Animated,
@@ -11,34 +11,37 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../theme";
 import { Text, LoadingSpinner } from "../../atoms";
-import { BookSearchResult } from "../../molecules";
-import { bookSearchService } from "../../../services/bookSearch.service";
-import { DictionaryApiResponse, GoogleBookResult } from "../../../types";
+import { WordSearchResult } from "../../molecules/WordSearchResult/WordSearchResult";
+import { DictionaryApiResponse } from "../../../types";
 import { useQueryClient } from "@tanstack/react-query";
 import ModalHeader from "../../molecules/ModalHeader/ModalHeader";
 import SearchBar from "../../molecules/SearchBar/SearchBar";
 import { wordsService } from "../../../services/words.service";
 import { wordSearchService } from "../../../services/wordSearch.service";
 
-interface AddBookModalProps {
+interface AddWordModalProps {
   visible: boolean;
   onClose: () => void;
+  bookId?: string; // Optional: if adding word from a specific book
 }
 
 type SearchState = "idle" | "loading" | "success" | "empty" | "error";
 
-export const AddWordModal: React.FC<AddBookModalProps> = ({
+export const AddWordModal: React.FC<AddWordModalProps> = ({
   visible,
   onClose,
+  bookId = "62dbfed8-0f3c-4c48-bd63-ce5755b582f7",
 }) => {
   const { theme } = useTheme();
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchState, setSearchState] = useState<SearchState>("idle");
-  const [results, setResults] = useState<DictionaryApiResponse>();
+  const [wordResult, setWordResult] = useState<DictionaryApiResponse | null>(
+    null
+  );
   const [errorMessage, setErrorMessage] = useState("");
-  const [addingBookId, setAddingBookId] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Animation for success checkmark
@@ -50,12 +53,17 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
 
     setSearchState("loading");
     setErrorMessage("");
+    setWordResult(null);
 
     try {
-      
-      const definitions = await wordSearchService.searchWords(searchQuery)
-      setResults(definitions);
-      setSearchState(definitions ? "success" : "empty");
+      const result = await wordSearchService.searchWord(searchQuery);
+
+      if (result) {
+        setWordResult(result);
+        setSearchState("success");
+      } else {
+        setSearchState("empty");
+      }
     } catch (error) {
       setSearchState("error");
       setErrorMessage("Something went wrong. Please try again.");
@@ -91,37 +99,39 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
     setShowSuccess(false);
   };
 
-  const handleSelectDefinition = async (definition: DictionaryApiResponse) => {
-    setAddingBookId(definition.id);
+  const handleSelectDefinition = async (
+    definition: string,
+    partOfSpeech: string,
+    example?: string,
+    audioUrl?: string
+  ) => {
+    if (!wordResult || !bookId) {
+      setErrorMessage("Please select a book first before adding words.");
+      return;
+    }
+
+    setIsAdding(true);
+    setErrorMessage("");
 
     try {
       await wordsService.addNewWord({
-        library_book_id,
-        text,
-        language_code,
-        chosen_sense_id,
-        page_number,
-        chapter,
-        context_snippet,
-        saved_definition,
-        saved_part_of_speech,
-        saved_example,
-        saved_audio_url,
-        // title: book.title,
-        // author: book.authors.length > 0 ? book.authors.join(", ") : undefined,
-        // isbn13: book.isbn13 ?? undefined,
-        // cover_image_url: book.coverUrl ?? undefined,
-        // language_code: book.language,
+        library_book_id: bookId,
+        text: wordResult.word,
+        language_code: "en",
+        saved_definition: definition,
+        saved_part_of_speech: partOfSpeech,
+        saved_example: example,
+        saved_audio_url: audioUrl,
       });
 
-      // Invalidate library queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["library"] });
+      // Invalidate words queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["words"] });
 
       // Play success animation
       playSuccessAnimation();
     } catch (error) {
-      setAddingBookId(null);
-      setErrorMessage("Failed to add book. Please try again.");
+      setIsAdding(false);
+      setErrorMessage("Failed to add word. Please try again.");
     }
   };
 
@@ -129,9 +139,9 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
     // Reset state
     setSearchQuery("");
     setSearchState("idle");
-    setResults([]);
+    setWordResult(null);
     setErrorMessage("");
-    setAddingBookId(null);
+    setIsAdding(false);
     resetSuccessAnimation();
     onClose();
   };
@@ -161,7 +171,7 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
       return (
         <View style={styles.emptyState}>
           <Ionicons
-            name="book-outline"
+            name="document-text-outline"
             size={64}
             color={theme.colors.divider}
           />
@@ -171,10 +181,10 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
             center
             style={styles.emptyText}
           >
-            No books found for "{searchQuery}"
+            No definition found for "{searchQuery}"
           </Text>
           <Text variant="caption" color="secondary" center>
-            Try a different search term
+            Check the spelling or try a different word
           </Text>
         </View>
       );
@@ -224,6 +234,21 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
           placeholder="Search for a word"
         />
 
+        {/* Book Warning Banner */}
+        {!bookId && (
+          <View
+            style={[
+              styles.warningBanner,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <Ionicons name="information-circle" size={20} color="#FF9800" />
+            <Text variant="bodySmall" style={styles.warningText}>
+              Select a book first to add words to your library
+            </Text>
+          </View>
+        )}
+
         {/* Error Banner */}
         {errorMessage && searchState !== "error" && (
           <View
@@ -244,20 +269,17 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
           <View style={styles.loadingContainer}>
             <LoadingSpinner size="lg" />
           </View>
-        ) : searchState === "success" ? (
-          <FlatList
-            data={results}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <BookSearchResult
-                definition={item}
-                onPress={handleSelectDefinition}
-                isAdding={addingBookId === item.id}
-              />
-            )}
-            contentContainerStyle={styles.listContent}
+        ) : searchState === "success" && wordResult ? (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
-          />
+          >
+            <WordSearchResult
+              word={wordResult}
+              onSelectDefinition={handleSelectDefinition}
+              isAdding={isAdding}
+            />
+          </ScrollView>
         ) : (
           renderEmptyState()
         )}
@@ -286,7 +308,7 @@ export const AddWordModal: React.FC<AddBookModalProps> = ({
                   { color: theme.colors.primaryText },
                 ]}
               >
-                Book Added!
+                Word Added!
               </Text>
             </Animated.View>
           </View>
@@ -319,7 +341,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  listContent: {
+  scrollContent: {
     paddingBottom: 24,
   },
   emptyState: {
@@ -344,6 +366,19 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     color: "#E53935",
+  },
+  warningBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  warningText: {
+    flex: 1,
+    color: "#FF9800",
   },
   successOverlay: {
     ...StyleSheet.absoluteFillObject,

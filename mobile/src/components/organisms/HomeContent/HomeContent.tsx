@@ -4,23 +4,15 @@ import { useTheme } from "../../../theme";
 import { SectionHeader, Spacer } from "../../atoms";
 import { BookCard } from "../../molecules";
 import RecentlySavedWordsCard from "../../molecules/RecentlySavedWordsCard/RecentlySavedWords";
-
-// Mock data - replace with real data fetching later
-const MOCK_CURRENTLY_READING = {
-  id: "1",
-  title: "The Great Gatsby",
-  author: "F. Scott Fitzgerald",
-  coverUri: "https://covers.openlibrary.org/b/id/8432047-M.jpg",
-  currentPage: 142,
-  totalPages: 180,
-};
+import { useLibraryBooks } from "../../../hooks/queries/useLibrary";
 
 export const HomeContent: React.FC = () => {
   const { theme } = useTheme();
+  const { data, isLoading, isError } = useLibraryBooks();
 
   const handleBookPress = () => {
     // TODO: Navigate to book details
-    console.log("Navigate to book details:", MOCK_CURRENTLY_READING.id);
+    console.log("Navigate to book details:");
   };
 
   return (
@@ -31,14 +23,18 @@ export const HomeContent: React.FC = () => {
     >
       <SectionHeader title="Currently Reading" />
       <Spacer size="sm" />
-      <BookCard
-        title={MOCK_CURRENTLY_READING.title}
-        author={MOCK_CURRENTLY_READING.author}
-        coverUri={MOCK_CURRENTLY_READING.coverUri}
-        currentPage={MOCK_CURRENTLY_READING.currentPage}
-        totalPages={MOCK_CURRENTLY_READING.totalPages}
-        onPress={handleBookPress}
-      />
+
+      {/* Only show BookCard if we have a book */}
+      {data?.map((book) => (
+        <BookCard
+          book={book}
+          onPress={function (): void {
+            throw new Error("Function not implemented.");
+          }}
+          showProgress={true}
+        />
+      ))}
+
       <SectionHeader title="Recently Saved Words" />
       <Spacer size="sm" />
       <RecentlySavedWordsCard />

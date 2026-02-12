@@ -4,7 +4,7 @@ import { Text } from "../Text";
 
 interface BookCardInfoProps {
   title: string;
-  author: string;
+  author?: string | null;
 }
 
 export const BookCardInfo: React.FC<BookCardInfoProps> = ({
@@ -16,9 +16,11 @@ export const BookCardInfo: React.FC<BookCardInfoProps> = ({
       <Text variant="body" style={styles.title} numberOfLines={2}>
         {title}
       </Text>
-      <Text variant="caption" color="secondary" numberOfLines={1}>
-        {author}
-      </Text>
+      {author && (
+        <Text variant="caption" color="secondary" numberOfLines={1}>
+          {author}
+        </Text>
+      )}
     </View>
   );
 };

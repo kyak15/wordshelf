@@ -1,26 +1,44 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "../../../theme";
-import { BookThumbnail, BookCardInfo, BookCardProgress } from "../../atoms";
+import {
+  BookThumbnail,
+  BookCardInfo,
+  BookCardProgress,
+  Text,
+} from "../../atoms";
+import { LibraryBookWithDetails } from "../../../types";
 
 interface BookCardProps {
-  title: string;
-  author: string;
-  coverUri?: string | null;
-  currentPage: number;
-  totalPages: number;
-  onPress?: () => void;
+  book: LibraryBookWithDetails;
+  onPress: () => void;
+  showStatus?: boolean; // For library view
+  showProgress?: boolean; // For library view
+  wordCount?: number; // For flashcard view - pass the count
+  compact?: boolean; // Smaller version if needed
 }
 
 export const BookCard: React.FC<BookCardProps> = ({
-  title,
-  author,
-  coverUri,
-  currentPage,
-  totalPages,
+  book,
   onPress,
+  showStatus,
+  showProgress,
+  wordCount,
+  compact,
 }) => {
   const { theme } = useTheme();
+
+  // Safety check: if book or book.book is undefined, return null
+  if (!book || !book.book) {
+    return null;
+  }
+
+  // Determine what to show in the bottom section
+  const shouldShowProgress =
+    showProgress !== false &&
+    book.current_page !== undefined &&
+    book.current_page !== null;
+  const shouldShowWordCount = wordCount !== undefined;
 
   return (
     <TouchableOpacity
@@ -34,10 +52,31 @@ export const BookCard: React.FC<BookCardProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <BookThumbnail uri={coverUri} size="medium" />
+      <BookThumbnail uri={book.book.cover_image_url} size="medium" />
       <View style={styles.content}>
-        <BookCardInfo title={title} author={author} />
-        <BookCardProgress currentPage={currentPage} totalPages={totalPages} />
+        <BookCardInfo title={book.book.title} author={book.book.author} />
+
+        {/* Show progress bar if applicable */}
+        {shouldShowProgress && book.current_page && (
+          <BookCardProgress
+            currentPage={book.current_page}
+            totalPages={book.totalPages || 0}
+          />
+        )}
+
+        {/* Show word count badge if applicable */}
+        {shouldShowWordCount && (
+          <View
+            style={[
+              styles.wordCountBadge,
+              { backgroundColor: theme.colors.accent },
+            ]}
+          >
+            <Text variant="caption" style={styles.wordCountText}>
+              {wordCount} {wordCount === 1 ? "word" : "words"}
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -57,5 +96,15 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
     justifyContent: "space-between",
+  },
+  wordCountBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  wordCountText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
 });

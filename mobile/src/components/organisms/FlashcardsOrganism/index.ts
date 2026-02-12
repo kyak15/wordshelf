@@ -1,0 +1,1 @@
+export { FlashcardsOrganism } from "./FlashcardsOrganism";

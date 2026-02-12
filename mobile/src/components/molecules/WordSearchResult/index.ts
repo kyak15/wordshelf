@@ -1,0 +1,1 @@
+export { WordSearchResult } from "./WordSearchResult";

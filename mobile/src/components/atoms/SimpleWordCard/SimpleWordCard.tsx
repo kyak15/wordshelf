@@ -21,6 +21,7 @@ export default function SimpleWordCard({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: "column",
   },
   content: {
     paddingHorizontal: 24,

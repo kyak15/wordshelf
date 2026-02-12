@@ -12,8 +12,6 @@ export default function RecentlySavedWordsCard({
 }: RecentlySavedWordsCardProps) {
   const { data, isLoading, isError } = useWords();
 
-  console.log(data);
-
   const finalData = listLength ? data?.slice(0, listLength) : data;
 
   return (
