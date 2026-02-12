@@ -276,3 +276,75 @@ export interface HealthStatus {
   status: "ok";
   timestamp: string;
 }
+
+// ============================================================
+// Google Books API Types
+// ============================================================
+
+/**
+ * Simplified book result from Google Books API
+ * Used for displaying search results
+ */
+export interface GoogleBookResult {
+  id: string;
+  title: string;
+  authors: string[];
+  coverUrl: string | null;
+  isbn13: string | null;
+  language: string;
+}
+
+/**
+ * Raw Google Books API volume response
+ */
+export interface GoogleBooksVolumeInfo {
+  title: string;
+  authors?: string[];
+  publishedDate?: string;
+  description?: string;
+  industryIdentifiers?: Array<{
+    type: string;
+    identifier: string;
+  }>;
+  imageLinks?: {
+    smallThumbnail?: string;
+    thumbnail?: string;
+  };
+  language?: string;
+}
+
+export interface GoogleBooksVolume {
+  id: string;
+  volumeInfo: GoogleBooksVolumeInfo;
+}
+
+export interface GoogleBooksSearchResponse {
+  kind: string;
+  totalItems: number;
+  items?: GoogleBooksVolume[];
+}
+
+export interface DictionaryApiPhonetics {
+  text: string;
+  audio: string;
+}
+
+export interface DictionaryApiDefinitions {
+  definition: string;
+  example: string;
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
+export interface DictionaryApiMeanings {
+  partOfSpeech: string;
+  definitions: DictionaryApiDefinitions;
+}
+
+export interface DictionaryApiResponse {
+  word: string;
+  phonetic: string;
+  phonetics: DictionaryApiPhonetics[];
+  origin: string;
+  meanings: DictionaryApiMeanings[];
+}

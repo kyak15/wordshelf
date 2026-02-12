@@ -12,11 +12,14 @@ export default function RecentlySavedWordsCard({
 }: RecentlySavedWordsCardProps) {
   const { data, isLoading, isError } = useWords();
 
+  console.log(data);
+
   const finalData = listLength ? data?.slice(0, listLength) : data;
 
   return (
     <View>
       {isLoading ?? <LoadingSpinner />}
+
       {finalData?.map((word) => (
         <SimpleWordCard
           key={word.saved_word_id}

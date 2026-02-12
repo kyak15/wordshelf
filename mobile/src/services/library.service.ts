@@ -23,11 +23,12 @@ export const libraryService = {
     author?: string;
     isbn13?: string;
     cover_image_url?: string;
-    language_code?: string;
+    language_code: string;
   }): Promise<LibraryBookWithDetails> {
+    // Backend expects { book: { ... } } structure
     const response = await apiClient.post<LibraryBookWithDetails>(
       "/library/library",
-      bookData
+      { book: bookData }
     );
     if (response.error) throw new Error(response.error);
     return response.data!;

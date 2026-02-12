@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../theme";
 import { Text } from "../atoms";
+import { AddBookModal } from "./AddBookModal";
+import { AddWordModal } from "./AddWordModal/AddWordModal";
 
 type TabIconName = "home" | "layers" | "add" | "stats-chart" | "person";
 
@@ -41,6 +43,8 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddBookModal, setShowAddBookModal] = useState(false);
+  const [showAddWordModal, setShowAddWordModal] = useState(false);
 
   const handleAddPress = () => {
     setShowAddModal(true);
@@ -48,8 +52,17 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
 
   const handleAddOption = (option: "word" | "book") => {
     setShowAddModal(false);
-    // TODO: Navigate to add word or add book flow
-    console.log(`Add ${option} selected`);
+    if (option === "book") {
+      // Small delay to let the first modal close smoothly
+      setTimeout(() => {
+        setShowAddBookModal(true);
+      }, 200);
+    } else {
+      // TODO: Navigate to add word flow
+      setTimeout(() => {
+        setShowAddWordModal(true);
+      }, 200);
+    }
   };
 
   return (
@@ -207,6 +220,16 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
           </View>
         </Pressable>
       </Modal>
+
+      {/* Add Book Modal */}
+      <AddBookModal
+        visible={showAddBookModal}
+        onClose={() => setShowAddBookModal(false)}
+      />
+      <AddWordModal
+        visible={showAddWordModal}
+        onClose={() => setShowAddWordModal(false)}
+      />
     </>
   );
 };
