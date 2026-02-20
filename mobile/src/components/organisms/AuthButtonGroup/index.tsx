@@ -1,12 +1,14 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { SocialSignInButton, SocialProvider } from "../../molecules/SocialSignInButton";
+import {
+  SocialSignInButton,
+  SocialProvider,
+} from "../../molecules/SocialSignInButton";
 import { Spacer } from "../../atoms/Spacer";
 
 interface AuthButtonGroupProps {
   onGooglePress?: () => void;
   onApplePress?: () => void;
-  onEmailPress?: () => void;
   loadingProvider?: SocialProvider | null;
   enabledProviders?: SocialProvider[];
 }
@@ -14,9 +16,8 @@ interface AuthButtonGroupProps {
 export const AuthButtonGroup: React.FC<AuthButtonGroupProps> = ({
   onGooglePress,
   onApplePress,
-  onEmailPress,
   loadingProvider = null,
-  enabledProviders = ["google"], // Default to only Google for now
+  enabledProviders = ["google"],
 }) => {
   const isLoading = loadingProvider !== null;
 
@@ -35,23 +36,11 @@ export const AuthButtonGroup: React.FC<AuthButtonGroupProps> = ({
       )}
 
       {enabledProviders.includes("apple") && onApplePress && (
-        <>
-          <SocialSignInButton
-            provider="apple"
-            onPress={onApplePress}
-            loading={loadingProvider === "apple"}
-            disabled={isLoading && loadingProvider !== "apple"}
-          />
-          <Spacer size="sm" />
-        </>
-      )}
-
-      {enabledProviders.includes("email") && onEmailPress && (
         <SocialSignInButton
-          provider="email"
-          onPress={onEmailPress}
-          loading={loadingProvider === "email"}
-          disabled={isLoading && loadingProvider !== "email"}
+          provider="apple"
+          onPress={onApplePress}
+          loading={loadingProvider === "apple"}
+          disabled={isLoading && loadingProvider !== "apple"}
         />
       )}
     </View>

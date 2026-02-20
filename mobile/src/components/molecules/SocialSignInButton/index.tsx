@@ -5,10 +5,11 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Text } from "../../atoms/Text";
 import { useTheme } from "../../../theme";
 
-export type SocialProvider = "google" | "apple" | "email";
+export type SocialProvider = "google" | "apple";
 
 interface SocialSignInButtonProps {
   provider: SocialProvider;
@@ -19,19 +20,15 @@ interface SocialSignInButtonProps {
 
 const providerConfig: Record<
   SocialProvider,
-  { label: string; iconPlaceholder: string }
+  { label: string; icon: keyof typeof Ionicons.glyphMap }
 > = {
   google: {
     label: "Continue with Google",
-    iconPlaceholder: "G",
+    icon: "logo-google",
   },
   apple: {
     label: "Continue with Apple",
-    iconPlaceholder: "",
-  },
-  email: {
-    label: "Continue with Email",
-    iconPlaceholder: "✉",
+    icon: "logo-apple",
   },
 };
 
@@ -65,7 +62,11 @@ export const SocialSignInButton: React.FC<SocialSignInButtonProps> = ({
       ) : (
         <>
           <View style={styles.iconContainer}>
-            <Text variant="body">{config.iconPlaceholder}</Text>
+            <Ionicons
+              name={config.icon}
+              size={20}
+              color={theme.colors.primaryText}
+            />
           </View>
           <Text variant="body">{config.label}</Text>
         </>

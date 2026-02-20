@@ -46,6 +46,10 @@ class ApiClient {
     return !!this.accessToken && !!this.refreshToken;
   }
 
+  getRefreshToken(): string | null {
+    return this.refreshToken;
+  }
+
   private async refreshAccessToken(): Promise<boolean> {
     if (!this.refreshToken) return false;
 
@@ -93,7 +97,7 @@ class ApiClient {
 
   async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
     const headers: HeadersInit = {
@@ -102,9 +106,8 @@ class ApiClient {
     };
 
     if (this.accessToken) {
-      (headers as Record<string, string>)[
-        "Authorization"
-      ] = `Bearer ${this.accessToken}`;
+      (headers as Record<string, string>)["Authorization"] =
+        `Bearer ${this.accessToken}`;
     }
 
     try {
@@ -114,9 +117,8 @@ class ApiClient {
       if (response.status === 401 && this.refreshToken) {
         const refreshed = await this.refreshAccessToken();
         if (refreshed) {
-          (headers as Record<string, string>)[
-            "Authorization"
-          ] = `Bearer ${this.accessToken}`;
+          (headers as Record<string, string>)["Authorization"] =
+            `Bearer ${this.accessToken}`;
           response = await fetch(url, { ...options, headers });
         }
       }
@@ -126,6 +128,11 @@ class ApiClient {
         return {
           error: errorData.message || `Request failed: ${response.status}`,
         };
+      }
+
+      // Handle 204 No Content responses
+      if (response.status === 204) {
+        return { data: undefined as T };
       }
 
       const data = await response.json();

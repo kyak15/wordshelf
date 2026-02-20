@@ -1,6 +1,4 @@
 export { WelcomeScreen } from "./WelcomeScreen";
-export { EmailAuthScreen } from "./EmailAuthScreen";
-export { OTPVerificationScreen } from "./OTPVerificationScreen";
 export { HomeScreen } from "./HomeScreen";
 export { FlashcardsScreen } from "./FlashcardsScreen";
 export { WordsScreen } from "./WordsScreen";

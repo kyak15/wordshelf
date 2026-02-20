@@ -1,34 +1,36 @@
 import { apiClient } from "./api";
 import { AUTH_ENDPOINTS } from "../config/api";
+import { User, AuthResult } from "../types";
 
-export interface User {
-  user_id: string;
-  email: string | null;
-  display_name: string | null;
-}
-
-export interface AuthResult {
-  user: User;
+interface GoogleExchangeResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  user: User;
+}
+
+interface AppleSignInResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: User;
 }
 
 export const authService = {
   /**
-   * Exchange Google OAuth code for tokens
+   * Exchange Google authorization code for tokens
    */
-  async googleSignIn(
+  async googleExchange(
     code: string,
-    redirectUri: string,
-    codeVerifier?: string
+    codeVerifier?: string,
+    redirectUri?: string
   ): Promise<AuthResult> {
-    const response = await apiClient.post<AuthResult>(
+    const response = await apiClient.post<GoogleExchangeResponse>(
       AUTH_ENDPOINTS.googleExchange,
       {
         code,
-        redirectUri,
         codeVerifier,
+        redirectUri,
       }
     );
 
@@ -40,6 +42,7 @@ export const authService = {
       throw new Error("No data received from server");
     }
 
+    // Store tokens
     await apiClient.setTokens({
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
@@ -48,22 +51,21 @@ export const authService = {
 
     return response.data;
   },
-
   /**
-   * Apple Sign In
+   * Apple Sign In - exchange identity token for app tokens
    */
   async appleSignIn(
     identityToken: string,
-    userInfo?: {
+    user?: {
       name?: { firstName?: string; lastName?: string };
       email?: string;
     }
   ): Promise<AuthResult> {
-    const response = await apiClient.post<AuthResult>(
+    const response = await apiClient.post<AppleSignInResponse>(
       AUTH_ENDPOINTS.appleSignIn,
       {
         identityToken,
-        userInfo,
+        user,
       }
     );
 
@@ -88,17 +90,17 @@ export const authService = {
    * Get current user
    */
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<{ user: User }>(AUTH_ENDPOINTS.me);
+    const response = await apiClient.get<User>(AUTH_ENDPOINTS.me);
 
     if (response.error) {
       throw new Error(response.error);
     }
 
-    if (!response.data?.user) {
+    if (!response.data) {
       throw new Error("No user data received");
     }
 
-    return response.data.user;
+    return response.data;
   },
 
   /**
@@ -125,10 +127,26 @@ export const authService = {
   },
 
   /**
-   * Logout
+   * Logout - revokes refresh token on server
    */
   async logout(): Promise<void> {
-    await apiClient.post(AUTH_ENDPOINTS.logout);
+    const refreshToken = apiClient.getRefreshToken();
+    if (refreshToken) {
+      await apiClient.post(AUTH_ENDPOINTS.logout, { refreshToken });
+    }
+    await apiClient.clearTokens();
+  },
+
+  /**
+   * Delete account - permanently deletes user account and all data
+   */
+  async deleteAccount(): Promise<void> {
+    const response = await apiClient.delete("/auth/account");
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
     await apiClient.clearTokens();
   },
 };

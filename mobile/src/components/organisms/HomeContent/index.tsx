@@ -34,8 +34,10 @@ export const HomeContent: React.FC = () => {
   };
 
   return (
-    <View
+    <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
     >
       <GreetingCard />
 
@@ -94,7 +96,7 @@ export const HomeContent: React.FC = () => {
       </View>
 
       <Spacer size="lg" />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -104,7 +106,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   greetingContainer: {
     paddingHorizontal: 16,

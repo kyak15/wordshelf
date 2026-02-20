@@ -1,42 +1,31 @@
 import { DictionaryApiResponse } from "../types";
 
-function transformWord(word: DictionaryApiResponse) {
-  const audio = word.phonetics?.map((phone) => phone.audio);
-
-  return {
-    word: word.word,
-    phonetic: word.phonetic,
-    audio: audio,
-    meanings: word.meanings,
-  };
-}
+const DICTIONARY_API_URL = process.env.EXPO_PUBLIC_DICTIONARY_API_URL;
 
 export const wordSearchService = {
-  /**
-   * Search for books using Google Books API
-   * @param query - Search query (title or author)
-   * @param maxResults - Maximum number of results (default 10)
-   */
-  async searchWords(
-    query: string,
-    maxResults: number = 10
-  ): Promise<DictionaryApiResponse[]> {
+  async searchWord(query: string): Promise<DictionaryApiResponse | null> {
     if (!query.trim()) {
-      return [];
+      return null;
     }
 
-    const response = await fetch(`${process.env.DICTIONARY_URL}/${query}`);
+    const response = await fetch(
+      `${DICTIONARY_API_URL}/${query.trim().toLowerCase()}`,
+    );
 
     if (!response.ok) {
-      throw new Error(`Book search failed: ${response.status}`);
+      if (response.status === 404) {
+        return null; // Word not found
+      }
+      throw new Error(`Word search failed: ${response.status}`);
     }
 
     const data: DictionaryApiResponse[] = await response.json();
 
     if (!data || data.length === 0) {
-      return [];
+      return null;
     }
 
-    return data.map(transformWord);
+    // Return the first result
+    return data[0];
   },
 };

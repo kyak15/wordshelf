@@ -16,14 +16,10 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Welcome">;
 export const WelcomeScreen: React.FC = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
-  const { signInWithGoogle, isLoading, error } = useAuth();
+  const { signInWithGoogle, signInWithApple, isAppleSignInAvailable, isLoading, error } = useAuth();
   const [loadingProvider, setLoadingProvider] = React.useState<
-    "google" | "email" | null
+    "google" | "apple" | null
   >(null);
-
-  const handleEmailPress = () => {
-    navigation.navigate("EmailAuth");
-  };
 
   const handleGooglePress = async () => {
     try {
@@ -33,6 +29,20 @@ export const WelcomeScreen: React.FC = () => {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to sign in with Google";
+      Alert.alert("Sign In Failed", errorMessage);
+    } finally {
+      setLoadingProvider(null);
+    }
+  };
+
+  const handleApplePress = async () => {
+    try {
+      setLoadingProvider("apple");
+      await signInWithApple();
+      // On success, navigation will happen automatically via AuthContext status change
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to sign in with Apple";
       Alert.alert("Sign In Failed", errorMessage);
     } finally {
       setLoadingProvider(null);
@@ -59,8 +69,10 @@ export const WelcomeScreen: React.FC = () => {
         <View style={styles.authSection}>
           <AuthButtonGroup
             onGooglePress={handleGooglePress}
-            onEmailPress={handleEmailPress}
-            enabledProviders={["google", "email"]}
+            onApplePress={isAppleSignInAvailable ? handleApplePress : undefined}
+            enabledProviders={
+              isAppleSignInAvailable ? ["apple", "google"] : ["google"]
+            }
             loadingProvider={loadingProvider}
           />
         </View>

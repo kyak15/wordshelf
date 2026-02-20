@@ -1,133 +1,209 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { apiClient } from "../services/api";
-import { authService, User, AuthResult } from "../services/auth.service";
+import { AuthError } from "expo-auth-session";
+import * as React from "react";
+import * as WebBrowser from "expo-web-browser";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Platform } from "react-native";
+import { authService } from "../services/auth.service";
+import { useGoogleAuth } from "../hooks/useGoogleAuth";
 
-type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+WebBrowser.maybeCompleteAuthSession();
 
-interface AuthContextValue {
-  user: User | null;
-  status: AuthStatus;
-  signInWithGoogle: (
-    code: string,
-    redirectUri: string,
-    codeVerifier?: string
-  ) => Promise<void>;
-  signInWithApple: (
-    identityToken: string,
-    userInfo?: {
-      name?: { firstName?: string; lastName?: string };
-      email?: string;
-    }
-  ) => Promise<void>;
-  signOut: () => Promise<void>;
-  /** DEV ONLY: skip auth to test app features on iOS simulator */
-  devSkipAuth: () => Promise<void>;
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
+  given_name?: string;
+  family_name?: string;
+  email_verified?: string;
+  provider?: string; // apple || google
+  exp?: number;
+  cookieExpiration?: number;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = React.createContext({
+  user: null as AuthUser | null,
+  signInWithGoogle: async () => {},
+  signInWithApple: async () => {},
+  isAppleSignInAvailable: false,
+  signOut: async () => {},
+  fetchWithAuth: async (url: string, options?: RequestInit) =>
+    Promise.resolve(new Response()),
+  isLoading: false,
+  status: "unauthenticated" as "loading" | "authenticated" | "unauthenticated",
+  error: null as AuthError | null,
+});
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<AuthError | null>(null);
+  const [isAppleSignInAvailable, setIsAppleSignInAvailable] =
+    React.useState(false);
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [status, setStatus] = useState<AuthStatus>("loading");
-
-  useEffect(() => {
-    initializeAuth();
+  // Check Apple Sign In availability on mount
+  React.useEffect(() => {
+    const checkAppleSignIn = async () => {
+      if (Platform.OS === "ios") {
+        const isAvailable = await AppleAuthentication.isAvailableAsync();
+        setIsAppleSignInAvailable(isAvailable);
+      }
+    };
+    checkAppleSignIn();
   }, []);
 
-  const initializeAuth = async () => {
+  // Google OAuth configuration
+  // For iOS OAuth clients, use the bundle ID-based redirect URI
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
+  // iOS clients use bundle-based redirect URIs
+  const redirectUri = `com.kyak15.wordshelf:/`;
+
+  const googleAuth = useGoogleAuth({
+    clientId,
+    redirectUri,
+  });
+
+  const signInWithGoogle = async () => {
     try {
-      await apiClient.initialize();
+      setIsLoading(true);
+      setError(null);
 
-      if (apiClient.hasTokens()) {
-        // Try to get current user - but don't fail if backend is unavailable
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-          setStatus("authenticated");
-          return;
-        } catch {
-          // Backend unavailable or token invalid - clear and show login
-          await apiClient.clearTokens();
+      // Prompt user to sign in with Google
+      const result = await googleAuth.promptAsync();
+
+      if (result.type === "success" && result.code) {
+        // Exchange authorization code for tokens with backend
+        const authResult = await authService.googleExchange(
+          result.code,
+          result.codeVerifier,
+          redirectUri,
+        );
+
+        // Set user from response
+        if (authResult.user) {
+          setUser({
+            id: authResult.user.user_id,
+            email: authResult.user.email || "",
+            name:
+              authResult.user.display_name || authResult.user.email || "User",
+            provider: "google",
+          });
         }
+      } else if (result.type === "error") {
+        throw new Error(result.error || "Google sign-in failed");
       }
-      setStatus("unauthenticated");
-    } catch {
-      // Token invalid or expired
-      setStatus("unauthenticated");
+      // If type is "dismiss", user cancelled - do nothing
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to sign in with Google";
+      console.error("Google sign-in error:", errorMessage);
+      setError({
+        code: "google_signin_failed",
+        message: errorMessage,
+      } as AuthError);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAuthResult = (result: AuthResult) => {
-    setUser(result.user);
-    setStatus("authenticated");
-  };
+  const signInWithApple = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-  const signInWithGoogle = async (
-    code: string,
-    redirectUri: string,
-    codeVerifier?: string
-  ) => {
-    const result = await authService.googleSignIn(
-      code,
-      redirectUri,
-      codeVerifier
-    );
-    handleAuthResult(result);
-  };
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
 
-  const signInWithApple = async (
-    identityToken: string,
-    userInfo?: {
-      name?: { firstName?: string; lastName?: string };
-      email?: string;
+      if (!credential.identityToken) {
+        throw new Error("No identity token received from Apple");
+      }
+
+      // Exchange identity token with backend
+      const authResult = await authService.appleSignIn(
+        credential.identityToken,
+        {
+          name: credential.fullName
+            ? {
+                firstName: credential.fullName.givenName ?? undefined,
+                lastName: credential.fullName.familyName ?? undefined,
+              }
+            : undefined,
+          email: credential.email ?? undefined,
+        },
+      );
+
+      // Set user from response
+      if (authResult.user) {
+        setUser({
+          id: authResult.user.user_id,
+          email: authResult.user.email || "",
+          name: authResult.user.display_name || authResult.user.email || "User",
+          provider: "apple",
+        });
+      }
+    } catch (err) {
+      // Handle user cancellation gracefully
+      if (
+        err instanceof Error &&
+        (err as any).code === "ERR_REQUEST_CANCELED"
+      ) {
+        // User cancelled, don't show error
+        return;
+      }
+
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to sign in with Apple";
+      console.error("Apple sign-in error:", errorMessage);
+      setError({
+        code: "apple_signin_failed",
+        message: errorMessage,
+      } as AuthError);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  ) => {
-    const result = await authService.appleSignIn(identityToken, userInfo);
-    handleAuthResult(result);
   };
 
   const signOut = async () => {
-    await authService.logout();
-    setUser(null);
-    setStatus("unauthenticated");
-  };
-
-  const devSkipAuth = async () => {
-    if (!__DEV__) return;
     try {
-      const result = await authService.devLogin();
-      handleAuthResult(result);
+      setIsLoading(true);
+      await authService.logout();
+      setUser(null);
     } catch (err) {
-      // If backend isn't running, fall back to fake user so UI is still testable
-      console.warn("Dev login failed (is the backend running?):", err);
-      setUser({
-        user_id: "dev-user",
-        email: "dev@wordshelf.test",
-        display_name: "Dev User",
-      });
-      setStatus("authenticated");
+      console.error("Sign out error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const fetchWithAuth = async (url: string, options?: RequestInit) => {
+    // TODO: Implement authenticated fetch
+    return fetch(url, options);
+  };
+
+  const status = isLoading
+    ? "loading"
+    : user
+      ? "authenticated"
+      : "unauthenticated";
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        status,
         signInWithGoogle,
         signInWithApple,
+        isAppleSignInAvailable,
         signOut,
-        devSkipAuth,
+        fetchWithAuth,
+        isLoading,
+        status,
+        error,
       }}
     >
       {children}
@@ -135,8 +211,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-export const useAuth = (): AuthContextValue => {
-  const context = useContext(AuthContext);
+export const useAuth = () => {
+  const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

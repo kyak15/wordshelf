@@ -5,8 +5,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "./types";
 import {
   WelcomeScreen,
-  EmailAuthScreen,
-  OTPVerificationScreen,
   WordsScreen,
   ReviewSessionScreen,
   BookDetailScreen,
@@ -42,14 +40,7 @@ export const RootNavigator: React.FC = () => {
         }}
       >
         {status === "unauthenticated" ? (
-          <>
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="EmailAuth" component={EmailAuthScreen} />
-            <Stack.Screen
-              name="OTPVerification"
-              component={OTPVerificationScreen}
-            />
-          </>
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
         ) : (
           <>
             <Stack.Screen name="Main" component={MainTabNavigator} />
