@@ -1,1 +1,0 @@
-export { SavedWordCard } from "./SavedWordCard";

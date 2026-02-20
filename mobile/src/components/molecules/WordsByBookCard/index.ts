@@ -1,1 +1,0 @@
-export { WordsByBookCard } from "./WordsByBookCard";

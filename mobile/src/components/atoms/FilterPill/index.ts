@@ -1,1 +1,0 @@
-export { FilterPill } from "./FilterPill";

@@ -1,1 +1,0 @@
-export { MiniProgressCard } from "./MiniProgressCard";
