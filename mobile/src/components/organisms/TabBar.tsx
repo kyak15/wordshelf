@@ -10,9 +10,9 @@ import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../theme";
-import { Text } from "../atoms";
+import { Text } from "../atoms/Text";
 import { AddBookModal } from "./AddBookModal";
-import { AddWordModal } from "./AddWordModal/AddWordModal";
+import { AddWordModal } from "./AddWordModal";
 
 type TabIconName = "home" | "layers" | "add" | "stats-chart" | "person";
 
@@ -53,7 +53,6 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
   const handleAddOption = (option: "word" | "book") => {
     setShowAddModal(false);
     if (option === "book") {
-      // Small delay to let the first modal close smoothly
       setTimeout(() => {
         setShowAddBookModal(true);
       }, 200);
@@ -108,7 +107,6 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
             });
           };
 
-          // Add button gets special styling
           if (config.isAddButton) {
             return (
               <TouchableOpacity
@@ -159,7 +157,6 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
         })}
       </View>
 
-      {/* Add Modal */}
       <Modal
         visible={showAddModal}
         transparent
@@ -221,7 +218,6 @@ export const TabBar: React.FC<BottomTabBarProps> = ({
         </Pressable>
       </Modal>
 
-      {/* Add Book Modal */}
       <AddBookModal
         visible={showAddBookModal}
         onClose={() => setShowAddBookModal(false)}
@@ -256,7 +252,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -20,
+    marginTop: -5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
