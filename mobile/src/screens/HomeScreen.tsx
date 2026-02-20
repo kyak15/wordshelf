@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { HomeContent } from "../components/organisms";
+import { HomeContent } from "../components/organisms/HomeContent";
 import { useTheme } from "../theme";
 
 export const HomeScreen: React.FC = () => {

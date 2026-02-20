@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -7,19 +7,22 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../theme";
-import { Text, LoadingSpinner } from "../components/atoms";
+import { Text } from "../components/atoms/Text";
+import { LoadingSpinner } from "../components/atoms/LoadingSpinner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDueWords, useReviewWord } from "../hooks/queries/useWords";
-import { SavedWordRow } from "../types";
-import ReviewButtonCard from "../components/molecules/ReviewButtonCard/ReviewButtonCard";
+import type { SavedWordRow } from "../types";
+import ReviewButtonCard from "../components/molecules/ReviewButtonCard";
+import FlashcardBack from "../components/molecules/FlashcardBack";
+import FlashcardFront from "../components/molecules/FlashcardFront";
 
 const { width } = Dimensions.get("window");
 
-type ReviewSessionRouteProp = RouteProp<RootStackParamList, "ReviewSession">;
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "ReviewSession"
@@ -30,27 +33,44 @@ type ReviewQuality = 0 | 3 | 4 | 5; // Again, Hard, Good, Easy
 export const ReviewSessionScreen: React.FC = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<ReviewSessionRouteProp>();
+  const queryClient = useQueryClient();
 
   const { data: dueWords, isLoading } = useDueWords();
   const reviewMutation = useReviewWord();
 
+  // Session queue - words that need to be reviewed (includes re-queued words)
+  const [sessionQueue, setSessionQueue] = useState<SavedWordRow[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
-  const [reviewedCount, setReviewedCount] = useState(0);
+  const [reviewedCount, setReviewedCount] = useState(0); // Successful reviews (Good/Easy)
+  const sessionInitialized = useRef(false);
+
+  // Initialize session queue ONCE when dueWords first loads
+  useEffect(() => {
+    if (dueWords && dueWords.length > 0 && !sessionInitialized.current) {
+      sessionInitialized.current = true;
+      setSessionQueue([...dueWords]);
+      console.log(`[Session] Initialized with ${dueWords.length} words`);
+    }
+  }, [dueWords]);
 
   // Animation values
-  const flipAnim = useState(new Animated.Value(0))[0];
-  const slideAnim = useState(new Animated.Value(0))[0];
+  const flipAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const isAnimating = useRef(false);
 
-  const currentWord = dueWords?.[currentIndex];
-  const totalWords = dueWords?.length || 0;
-  const progress = totalWords > 0 ? ((currentIndex + 1) / totalWords) * 100 : 0;
+  const currentWord = sessionQueue?.[currentIndex];
+  const totalInQueue = sessionQueue?.length || 0;
+  const remainingCards = totalInQueue - currentIndex;
+  const originalCount = dueWords?.length || 0;
+  // Progress based on successfully reviewed cards vs original count
+  const progress =
+    originalCount > 0 ? (reviewedCount / originalCount) * 100 : 0;
 
   // Flip animation
   const flipCard = () => {
-    if (isFlipped) return;
+    if (isFlipped || isAnimating.current) return;
 
     Animated.spring(flipAnim, {
       toValue: 1,
@@ -61,24 +81,16 @@ export const ReviewSessionScreen: React.FC = () => {
     setIsFlipped(true);
   };
 
-  // Reset flip for next card
-  const resetFlip = () => {
-    Animated.timing(flipAnim, {
-      toValue: 0,
-      duration: 0,
-      useNativeDriver: true,
-    }).start();
-    setIsFlipped(false);
-  };
-
   // Slide card away animation
   const slideCardAway = (callback: () => void) => {
+    isAnimating.current = true;
     Animated.timing(slideAnim, {
       toValue: -width,
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
       slideAnim.setValue(0);
+      isAnimating.current = false;
       callback();
     });
   };
@@ -86,32 +98,67 @@ export const ReviewSessionScreen: React.FC = () => {
   const handleReview = async (quality: ReviewQuality) => {
     if (!currentWord) return;
 
+    const isRequeue = quality === 0 || quality === 3;
+    const wordToRequeue = isRequeue ? currentWord : null;
+
+    console.log(
+      `[Review] Quality: ${quality}, isRequeue: ${isRequeue}, currentIndex: ${currentIndex}, queueLength: ${sessionQueue.length}`,
+    );
+
     try {
-      // Submit review
+      // Submit review to backend
       await reviewMutation.mutateAsync({
         wordId: currentWord.saved_word_id,
         review: { quality },
       });
 
-      // Slide card away and move to next
+      // Slide card away and handle queue
       slideCardAway(() => {
-        setReviewedCount((prev) => prev + 1);
+        // Calculate new queue and next index
+        let newQueue = [...sessionQueue];
+        if (wordToRequeue) {
+          newQueue = [...newQueue, wordToRequeue];
+          console.log(
+            `[Review] Re-queued word: ${wordToRequeue.text}, new queue length: ${newQueue.length}`,
+          );
+        }
 
-        if (currentIndex < totalWords - 1) {
-          setCurrentIndex((prev) => prev + 1);
-          resetFlip();
+        const nextIndex = currentIndex + 1;
+        console.log(
+          `[Review] nextIndex: ${nextIndex}, newQueue.length: ${newQueue.length}`,
+        );
+
+        // Update queue state
+        setSessionQueue(newQueue);
+
+        // Check if there are more cards
+        if (nextIndex < newQueue.length) {
+          console.log(
+            `[Review] Advancing to card at index ${nextIndex}: ${newQueue[nextIndex]?.text}`,
+          );
+          // Reset flip state and advance to next card
+          flipAnim.setValue(0);
+          setIsFlipped(false);
+          setCurrentIndex(nextIndex);
         } else {
-          // Session complete
+          console.log(`[Review] Session complete!`);
           setSessionComplete(true);
+        }
+
+        // Count successful reviews
+        if (!isRequeue) {
+          setReviewedCount((prev) => prev + 1);
         }
       });
     } catch (error) {
       console.error("Failed to submit review:", error);
-      // TODO: Show error toast
     }
   };
 
   const handleClose = () => {
+    // Invalidate queries so the app refreshes with updated review data
+    queryClient.invalidateQueries({ queryKey: ["words"] });
+    queryClient.invalidateQueries({ queryKey: ["stats"] });
     navigation.goBack();
   };
 
@@ -129,42 +176,45 @@ export const ReviewSessionScreen: React.FC = () => {
     );
   }
 
-  // No words due
-  if (!dueWords || dueWords.length === 0) {
+  // Session complete
+  if (sessionComplete) {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         edges={["top"]}
       >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close" size={28} color={theme.colors.primaryText} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.emptyContainer}>
-          <Ionicons
-            name="checkmark-circle"
-            size={80}
-            color={theme.colors.success}
-          />
-          <Text variant="h2" center style={styles.emptyTitle}>
-            All Caught Up!
+        <View style={styles.completeContainer}>
+          <Ionicons name="trophy" size={80} color={theme.colors.accent} />
+          <Text variant="h1" center style={styles.completeTitle}>
+            Session Complete!
           </Text>
           <Text
-            variant="body"
+            variant="h3"
             color="secondary"
             center
-            style={styles.emptyText}
+            style={styles.completeStats}
           >
-            No words due for review right now. Come back later!
+            You reviewed {reviewedCount}{" "}
+            {reviewedCount === 1 ? "word" : "words"}
           </Text>
+          <TouchableOpacity
+            style={[
+              styles.doneButton,
+              { backgroundColor: theme.colors.accent },
+            ]}
+            onPress={handleClose}
+          >
+            <Text variant="body" style={styles.doneButtonText}>
+              Done
+            </Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  // Session complete
-  if (sessionComplete) {
+  // Safety check: if currentWord is undefined, show completion
+  if (!currentWord) {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -226,17 +276,16 @@ export const ReviewSessionScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top"]}
     >
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={theme.colors.primaryText} />
         </TouchableOpacity>
         <Text variant="body" color="secondary">
-          {currentIndex + 1} / {totalWords}
+          {remainingCards} remaining
         </Text>
       </View>
 
-      {/* Progress Bar */}
+      {/* Progress */}
       <View
         style={[
           styles.progressBarContainer,
@@ -262,94 +311,22 @@ export const ReviewSessionScreen: React.FC = () => {
             },
           ]}
         >
-          {/* Front of card (Question) */}
-          <Animated.View
-            style={[
-              styles.cardFace,
-              styles.cardFront,
-              {
-                transform: [{ rotateY: frontInterpolate }],
-                opacity: frontOpacity,
-              },
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.cardContent}
-              onPress={flipCard}
-              activeOpacity={1}
-              disabled={isFlipped}
-            >
-              <View style={styles.wordContainer}>
-                <Text variant="h1" center style={styles.wordText}>
-                  {currentWord?.text}
-                </Text>
-                {currentWord?.saved_audio_url && (
-                  <Ionicons
-                    name="volume-high"
-                    size={32}
-                    color={theme.colors.accent}
-                    style={styles.audioIcon}
-                  />
-                )}
-              </View>
-              <Text
-                variant="body"
-                color="secondary"
-                center
-                style={styles.tapHint}
-              >
-                Tap to show definition
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
+          <FlashcardFront
+            text={currentWord?.text || ""}
+            frontInterpolate={frontInterpolate}
+            frontOpacity={frontOpacity}
+            flipCard={flipCard}
+            isFlipped={isFlipped}
+          />
 
-          {/* Back of card (Answer) */}
-          <Animated.View
-            style={[
-              styles.cardFace,
-              styles.cardBack,
-              {
-                transform: [{ rotateY: backInterpolate }],
-                opacity: backOpacity,
-              },
-            ]}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.answerContainer}>
-                <Text variant="h2" center style={styles.wordText}>
-                  {currentWord?.text}
-                </Text>
-
-                {currentWord?.saved_part_of_speech && (
-                  <Text
-                    variant="body"
-                    color="secondary"
-                    center
-                    style={styles.partOfSpeech}
-                  >
-                    {currentWord.saved_part_of_speech}
-                  </Text>
-                )}
-
-                {currentWord?.saved_definition && (
-                  <Text variant="body" center style={styles.definition}>
-                    {currentWord.saved_definition}
-                  </Text>
-                )}
-
-                {currentWord?.saved_example && (
-                  <Text
-                    variant="bodySmall"
-                    color="secondary"
-                    center
-                    style={styles.example}
-                  >
-                    "{currentWord.saved_example}"
-                  </Text>
-                )}
-              </View>
-            </View>
-          </Animated.View>
+          <FlashcardBack
+            text={currentWord?.text || ""}
+            savedPartOfSpeech={currentWord?.saved_part_of_speech}
+            savedDefinition={currentWord?.saved_definition}
+            savedExample={currentWord?.saved_example}
+            backInterpolate={backInterpolate}
+            backOpacity={backOpacity}
+          />
         </Animated.View>
       </View>
 
@@ -441,58 +418,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-  },
-  cardFace: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backfaceVisibility: "hidden",
-    borderRadius: 20,
-  },
-  cardFront: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardBack: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  wordContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  wordText: {
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  audioIcon: {
-    marginTop: 8,
-  },
-  tapHint: {
-    marginTop: 16,
-    opacity: 0.6,
-  },
-  answerContainer: {
-    alignItems: "center",
-    gap: 16,
-  },
-  partOfSpeech: {
-    fontStyle: "italic",
-    textTransform: "capitalize",
-  },
-  definition: {
-    lineHeight: 24,
-    textAlign: "center",
-  },
-  example: {
-    fontStyle: "italic",
-    textAlign: "center",
-    marginTop: 8,
   },
 });

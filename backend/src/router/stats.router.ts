@@ -4,6 +4,8 @@ import {
   getOverviewController,
   getReviewActivityController,
   getWordsActivityController,
+  getStreakController,
+  getMilestonesController,
 } from "../controller/stats.controller";
 
 export const statsRouter = Router();
@@ -13,3 +15,5 @@ statsRouter.use(requireAuth);
 statsRouter.get("/overview", getOverviewController); // high-level summary
 statsRouter.get("/review-activity", getReviewActivityController); // reviews per day
 statsRouter.get("/words-activity", getWordsActivityController); // words saved per day
+statsRouter.get("/streak", getStreakController); // current and longest streak
+statsRouter.get("/milestones", getMilestonesController); // all milestone stats

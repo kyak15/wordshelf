@@ -38,7 +38,7 @@ export const wordsService = {
       is_archived?: boolean;
       mastery_level?: number;
       search?: string;
-    }
+    },
   ): Promise<SavedWordRow[]> {
     let query = `SELECT ${SAVED_WORD_SELECT} ${SAVED_WORD_FROM} WHERE bsw.user_id = $1`;
     const params: unknown[] = [userId];
@@ -81,27 +81,23 @@ export const wordsService = {
          AND bsw.is_archived = false
          AND (bsw.next_review_at IS NULL OR bsw.next_review_at <= NOW())
        ORDER BY bsw.next_review_at ASC NULLS FIRST`,
-      [userId]
+      [userId],
     );
     return res.rows;
   },
 
   async getWordById(
     userId: string,
-    savedWordId: string
+    savedWordId: string,
   ): Promise<SavedWordRow | null> {
     const res = await pool.query<SavedWordRow>(
       `SELECT ${SAVED_WORD_SELECT} ${SAVED_WORD_FROM}
        WHERE bsw.user_id = $1 AND bsw.saved_word_id = $2`,
-      [userId, savedWordId]
+      [userId, savedWordId],
     );
     return res.rows[0] ?? null;
   },
 
-  /**
-   * Save a new word from a book.
-   * Finds or creates the word in the words table, then inserts into book_saved_words.
-   */
   async addWord(
     userId: string,
     input: {
@@ -116,7 +112,7 @@ export const wordsService = {
       saved_part_of_speech?: string;
       saved_example?: string;
       saved_audio_url?: string;
-    }
+    },
   ): Promise<SavedWordRow> {
     const client = await pool.connect();
     try {
@@ -129,7 +125,7 @@ export const wordsService = {
          VALUES ($1, $2)
          ON CONFLICT (language_code, text) DO UPDATE SET text = EXCLUDED.text
          RETURNING word_id`,
-        [input.text, langCode]
+        [input.text, langCode],
       );
       const wordId = wordRes.rows[0].word_id;
 
@@ -157,7 +153,7 @@ export const wordsService = {
           input.saved_part_of_speech ?? null,
           input.saved_example ?? null,
           input.saved_audio_url ?? null,
-        ]
+        ],
       );
 
       await client.query("COMMIT");
@@ -186,7 +182,7 @@ export const wordsService = {
       saved_part_of_speech?: string;
       saved_example?: string;
       saved_audio_url?: string;
-    }
+    },
   ): Promise<SavedWordRow | null> {
     const setClauses: string[] = [];
     const params: unknown[] = [userId, savedWordId];
@@ -223,7 +219,7 @@ export const wordsService = {
        WHERE w.word_id = bsw.word_id
          AND bsw.user_id = $1 AND bsw.saved_word_id = $2
        RETURNING ${SAVED_WORD_SELECT}`,
-      params
+      params,
     );
     return res.rows[0] ?? null;
   },
@@ -232,19 +228,15 @@ export const wordsService = {
     const res = await pool.query(
       `DELETE FROM book_saved_words
        WHERE user_id = $1 AND saved_word_id = $2`,
-      [userId, savedWordId]
+      [userId, savedWordId],
     );
     return (res.rowCount ?? 0) > 0;
   },
 
-  /**
-   * Submit a flashcard review result using SM-2 spaced repetition.
-   * quality: 0-5 (0-2 = forgot, 3-5 = remembered with varying ease)
-   */
   async submitReview(
     userId: string,
     savedWordId: string,
-    quality: number
+    quality: number,
   ): Promise<SavedWordRow | null> {
     // SM-2 algorithm:
     // If quality >= 3 (correct): advance interval
@@ -282,7 +274,7 @@ export const wordsService = {
        WHERE w.word_id = bsw.word_id
          AND bsw.user_id = $1 AND bsw.saved_word_id = $2
        RETURNING ${SAVED_WORD_SELECT}`,
-      [userId, savedWordId, quality]
+      [userId, savedWordId, quality],
     );
     return res.rows[0] ?? null;
   },

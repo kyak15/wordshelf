@@ -1,67 +1,220 @@
-// WordsScreen.tsx or WordsContent.tsx
-
-import { useState } from "react";
-import { View, FlatList } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../navigation/types";
 import {
   ScrollingFilterBar,
-  SavedWordCard,
   type FilterOption,
-} from "../components/molecules";
-import { useWords } from "../hooks/queries/useWords";
+} from "../components/molecules/ScrollingFilterBar";
+import { SwipeableWordCard } from "../components/molecules/SwipeableWordCard";
+import { Text } from "../components/atoms/Text";
+import { LoadingSpinner } from "../components/atoms/LoadingSpinner";
+import { useWords, useDeleteWord } from "../hooks/queries/useWords";
+import { useLibraryBooks } from "../hooks/queries/useLibrary";
+import { useTheme } from "../theme";
 
-export const WordsContent = () => {
-  const [activeFilter, setActiveFilter] = useState<string | null>("all");
+type WordsScreenRouteProp = RouteProp<RootStackParamList, "Words">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Words">;
 
-  // Get all words (you already have this hook)
-  const { data: words, isLoading } = useWords();
+export const WordsScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const route = useRoute<WordsScreenRouteProp>();
+  const navigation = useNavigation<NavigationProp>();
+  const { initialFilter, masteryLevel, bookId } = route.params || {};
 
-  // Define your filter options
+  // Fetch data
+  const { data: words, isLoading: wordsLoading } = useWords();
+  const { data: books, isLoading: booksLoading } = useLibraryBooks();
+  const deleteWordMutation = useDeleteWord();
+
+  const getInitialFilter = () => {
+    if (initialFilter === "mastery_level" && masteryLevel !== undefined) {
+      return `mastery_${masteryLevel}`;
+    }
+    if (initialFilter === "book" && bookId) {
+      return `book_${bookId}`;
+    }
+    return "all";
+  };
+
+  const [activeFilter, setActiveFilter] = useState<string>(getInitialFilter());
+
+  useEffect(() => {
+    setActiveFilter(getInitialFilter());
+  }, [initialFilter, masteryLevel, bookId]);
+
   const filters: FilterOption[] = [
     { id: "all", label: "All Words" },
-    { id: "learning", label: "Learning" },
-    { id: "reviewing", label: "Reviewing" },
-    { id: "familiar", label: "Familiar" },
-    { id: "mastered", label: "Mastered" },
-    // You can add book filters dynamically too
+    { id: "mastery_0", label: "🔴 Learning" },
+    { id: "mastery_1", label: "🟡 Reviewing" },
+    { id: "mastery_2", label: "🟢 Familiar" },
+    { id: "mastery_3", label: "✅ Mastered" },
   ];
+
+  // Add book filters if available
+  if (books && books.length > 0) {
+    filters.push({ id: "divider", label: "───" });
+
+    // Add each book as a filter
+    books.forEach((book) => {
+      const wordCount =
+        words?.filter((w) => w.library_book_id === book.library_book_id)
+          .length || 0;
+
+      // Only show books that have words
+      if (wordCount > 0) {
+        filters.push({
+          id: `book_${book.library_book_id}`,
+          label: `${book.book.title} (${wordCount})`,
+        });
+      }
+    });
+  }
 
   // Filter words based on active filter
   const filteredWords = words?.filter((word) => {
     if (activeFilter === "all") return true;
 
-    if (activeFilter === "learning") return word.mastery_level === 0;
-    if (activeFilter === "reviewing") return word.mastery_level === 1;
-    if (activeFilter === "familiar") return word.mastery_level === 2;
-    if (activeFilter === "mastered") return word.mastery_level === 3;
+    if (activeFilter.startsWith("mastery_")) {
+      const level = parseInt(activeFilter.split("_")[1]);
+      return word.mastery_level === level;
+    }
 
-    // Book filters would check word.library_book_id
+    // Book filters
+    if (activeFilter.startsWith("book_")) {
+      const bookIdFromFilter = activeFilter.replace("book_", "");
+      return word.library_book_id === bookIdFromFilter;
+    }
+
     return true;
   });
 
+  const handleWordPress = (wordId: string) => {
+    // TODO: Navigate to word detail or open edit modal
+    console.log("Navigate to word detail:", wordId);
+  };
+
+  const handleDeleteWord = (wordId: string) => {
+    deleteWordMutation.mutate(wordId);
+  };
+
+  // Loading state
+  if (wordsLoading || booksLoading) {
+    return (
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View style={styles.loadingContainer}>
+          <LoadingSpinner size="lg" />
+        </View>
+      </View>
+    );
+  }
+
+  // Empty state
+  if (!words || words.length === 0) {
+    return (
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View style={styles.emptyContainer}>
+          <Text variant="h2" center style={styles.emptyTitle}>
+            No words yet!
+          </Text>
+          <Text
+            variant="body"
+            color="secondary"
+            center
+            style={styles.emptyText}
+          >
+            Start building your vocabulary by adding words from your books
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  // No filtered results
+  const noFilteredResults = filteredWords && filteredWords.length === 0;
+
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {/* Filter Bar */}
       <ScrollingFilterBar
         filters={filters}
         activeFilterId={activeFilter}
-        onFilterSelect={setActiveFilter}
+        onFilterSelect={(filterId) => {
+          // Don't allow selecting the divider
+          if (filterId !== "divider") {
+            setActiveFilter(filterId);
+          }
+        }}
       />
 
       {/* Words List */}
-      <FlatList
-        data={filteredWords}
-        keyExtractor={(item) => item.saved_word_id}
-        renderItem={({ item }) => (
-          <SavedWordCard
-            word={item}
-            onPress={() => {
-              // Navigate to word detail or open edit modal
-              navigation.navigate("WordDetail", { wordId: item.saved_word_id });
-            }}
-            showMasteryLevel
-          />
-        )}
-      />
+      {noFilteredResults ? (
+        <View style={styles.emptyContainer}>
+          <Text variant="body" color="secondary" center>
+            No words found with this filter
+          </Text>
+          <Text
+            variant="caption"
+            color="secondary"
+            center
+            style={styles.emptyHint}
+          >
+            Try a different filter or add more words
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredWords}
+          keyExtractor={(item) => item.saved_word_id}
+          renderItem={({ item }) => (
+            <SwipeableWordCard
+              word={item}
+              onPress={() => handleWordPress(item.saved_word_id)}
+              onDelete={handleDeleteWord}
+              showMasteryLevel
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    marginBottom: 12,
+  },
+  emptyText: {
+    textAlign: "center",
+  },
+  emptyHint: {
+    marginTop: 8,
+  },
+  listContent: {
+    paddingBottom: 24,
+  },
+});

@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { libraryService } from "../../services/library.service";
 
-// Query keys
 const LIBRARY_KEYS = {
   all: ["library"] as const,
   books: ["library", "books"] as const,
@@ -43,23 +42,47 @@ export function useAddBook() {
       author?: string;
       isbn13?: string;
       cover_image_url?: string;
-      language_code?: string;
+      language_code: string;
     }) => libraryService.addBook(bookData),
 
     onSuccess: () => {
-      // Refetch the library after adding
+      // refetch library after adding and invalidate stats
+      queryClient.invalidateQueries({ queryKey: LIBRARY_KEYS.books });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+  });
+}
+
+export function useUpdateLibraryBook() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      bookId,
+      data,
+    }: {
+      bookId: string;
+      data: {
+        status?: string;
+        current_page?: number;
+        is_favorite?: boolean;
+      };
+    }) => libraryService.updateBook(bookId, data),
+
+    onSuccess: (_, { bookId }) => {
+      queryClient.invalidateQueries({ queryKey: LIBRARY_KEYS.book(bookId) });
       queryClient.invalidateQueries({ queryKey: LIBRARY_KEYS.books });
     },
   });
 }
 
-//TODO Implement useUpdateBook
-// export function useUpdateBook() {
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: () => libraryService.updateBook(bookData),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: LIBRARY_KEYS.books });
-//     },
-//   });
-// }
+export function useDeleteLibraryBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (bookId: string) => libraryService.deleteBook(bookId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LIBRARY_KEYS.books });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+  });
+}

@@ -32,7 +32,7 @@ export const wordsService = {
     if (options.search) params.append("search", options.search);
 
     const queryString = params.toString();
-    const endpoint = queryString ? `/words?${queryString}` : "/words";
+    const endpoint = queryString ? `words?${queryString}` : "words";
 
     const response = await apiClient.get<SavedWordRow[]>(endpoint);
     if (response.error) throw new Error(response.error);
@@ -55,11 +55,11 @@ export const wordsService = {
   },
   async updateWord(
     wordId: string,
-    updateWord: UpdateWordInput
+    updateWord: UpdateWordInput,
   ): Promise<SavedWordRow> {
     const response = await apiClient.put<SavedWordRow>(
       `/words/${wordId}`,
-      updateWord
+      updateWord,
     );
     if (response.error) throw new Error(response.error);
     return response.data!;
@@ -70,11 +70,11 @@ export const wordsService = {
   },
   async reviewWord(
     wordId: string,
-    review: SubmitReviewInput
+    review: SubmitReviewInput,
   ): Promise<SavedWordRow> {
     const response = await apiClient.patch<SavedWordRow>(
       `/words/${wordId}/review`,
-      review
+      review,
     );
     if (response.error) throw new Error(response.error);
     return response.data!;

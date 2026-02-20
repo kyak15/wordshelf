@@ -1,27 +1,43 @@
-import React, { useEffect } from "react";
-import { View, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import React from "react";
+import { View, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, Spacer } from "../components/atoms";
-import { AppLogo } from "../components/molecules";
-import { AuthButtonGroup } from "../components/organisms";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Text } from "../components/atoms/Text";
+import { Spacer } from "../components/atoms/Spacer";
+import AppLogo from "../components/molecules/AppLogo";
+import { AuthButtonGroup } from "../components/organisms/AuthButtonGroup";
 import { useTheme } from "../theme";
-import { useGoogleAuth } from "../hooks";
 import { useAuth } from "../context/AuthContext";
+import type { RootStackParamList } from "../navigation/types";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Welcome">;
 
 export const WelcomeScreen: React.FC = () => {
   const { theme } = useTheme();
-  const { devSkipAuth } = useAuth();
-  const {
-    signIn: googleSignIn,
-    loading: googleLoading,
-    error: googleError,
-  } = useGoogleAuth();
+  const navigation = useNavigation<NavigationProp>();
+  const { signInWithGoogle, isLoading, error } = useAuth();
+  const [loadingProvider, setLoadingProvider] = React.useState<
+    "google" | "email" | null
+  >(null);
 
-  useEffect(() => {
-    if (googleError) {
-      Alert.alert("Sign In Error", googleError);
+  const handleEmailPress = () => {
+    navigation.navigate("EmailAuth");
+  };
+
+  const handleGooglePress = async () => {
+    try {
+      setLoadingProvider("google");
+      await signInWithGoogle();
+      // On success, navigation will happen automatically via AuthContext status change
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to sign in with Google";
+      Alert.alert("Sign In Failed", errorMessage);
+    } finally {
+      setLoadingProvider(null);
     }
-  }, [googleError]);
+  };
 
   return (
     <SafeAreaView
@@ -32,7 +48,7 @@ export const WelcomeScreen: React.FC = () => {
           <AppLogo size="large" />
           <Spacer size="xl" />
           <Text variant="h1" center>
-            Welcome to WordShelf
+            Welcome to WordVault
           </Text>
           <Spacer size="md" />
           <Text variant="body" color="secondary" center>
@@ -42,27 +58,11 @@ export const WelcomeScreen: React.FC = () => {
 
         <View style={styles.authSection}>
           <AuthButtonGroup
-            onGooglePress={googleSignIn}
-            loadingProvider={googleLoading ? "google" : null}
-            enabledProviders={["google"]}
+            onGooglePress={handleGooglePress}
+            onEmailPress={handleEmailPress}
+            enabledProviders={["google", "email"]}
+            loadingProvider={loadingProvider}
           />
-
-          {__DEV__ && (
-            <>
-              <Spacer size="lg" />
-              <TouchableOpacity
-                style={[
-                  styles.devButton,
-                  { borderColor: theme.colors.divider },
-                ]}
-                onPress={devSkipAuth}
-              >
-                <Text variant="bodySmall" color="secondary">
-                  Skip Auth (Dev Only)
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
         </View>
       </View>
     </SafeAreaView>
@@ -85,12 +85,5 @@ const styles = StyleSheet.create({
   },
   authSection: {
     paddingBottom: 48,
-  },
-  devButton: {
-    alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderStyle: "dashed",
   },
 });

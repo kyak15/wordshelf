@@ -1,8 +1,5 @@
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
-/**
- * Main tab navigator param list (authenticated users)
- */
 export type MainTabParamList = {
   Home: undefined;
   Flashcards: undefined;
@@ -11,12 +8,22 @@ export type MainTabParamList = {
   Profile: undefined;
 };
 
-/**
- * Root stack navigator param list
- */
 export type RootStackParamList = {
   Welcome: undefined;
+  EmailAuth: undefined;
+  OTPVerification: { email: string };
   Main: NavigatorScreenParams<MainTabParamList>;
+  Words:
+    | {
+        initialFilter?: "mastery_level" | "book";
+        masteryLevel?: number;
+        bookId?: string;
+      }
+    | undefined;
+  ReviewSession: undefined;
+  BookDetail: {
+    bookId: string;
+  };
 };
 
 declare global {

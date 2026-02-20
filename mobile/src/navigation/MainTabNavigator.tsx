@@ -7,15 +7,11 @@ import {
   StatsScreen,
   ProfileScreen,
 } from "../screens";
-import { TabBar } from "../components/organisms";
+import { TabBar } from "../components/organisms/TabBar";
 import { View } from "react-native";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-/**
- * Placeholder screen for the Add tab
- * The actual add functionality is handled by the TabBar modal
- */
 const AddPlaceholder: React.FC = () => <View />;
 
 export const MainTabNavigator: React.FC = () => {

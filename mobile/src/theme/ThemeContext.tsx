@@ -6,14 +6,21 @@ import React, {
   ReactNode,
 } from "react";
 import { useColorScheme } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Theme, lightTheme, darkTheme } from "./theme";
 import { ColorScheme } from "./colors";
+
+const THEME_STORAGE_KEY = "@wordshelf_theme";
+
+type ThemePreference = "light" | "dark" | "system";
 
 interface ThemeContextValue {
   theme: Theme;
   colorScheme: ColorScheme;
+  themePreference: ThemePreference;
   toggleTheme: () => void;
   setColorScheme: (scheme: ColorScheme) => void;
+  setThemePreference: (pref: ThemePreference) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -24,26 +31,57 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(
-    systemColorScheme === "dark" ? "dark" : "light"
-  );
+  const [themePreference, setThemePreferenceState] =
+    useState<ThemePreference>("system");
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Sync with system preference changes
+  // Load saved preference on mount
   useEffect(() => {
-    if (systemColorScheme) {
-      setColorScheme(systemColorScheme);
-    }
-  }, [systemColorScheme]);
+    AsyncStorage.getItem(THEME_STORAGE_KEY).then((saved) => {
+      if (saved === "light" || saved === "dark" || saved === "system") {
+        setThemePreferenceState(saved);
+      }
+      setIsLoaded(true);
+    });
+  }, []);
+
+  const colorScheme: ColorScheme =
+    themePreference === "system"
+      ? systemColorScheme === "dark"
+        ? "dark"
+        : "light"
+      : themePreference;
 
   const theme = colorScheme === "dark" ? darkTheme : lightTheme;
 
-  const toggleTheme = () => {
-    setColorScheme((prev) => (prev === "light" ? "dark" : "light"));
+  const setThemePreference = (pref: ThemePreference) => {
+    setThemePreferenceState(pref);
+    AsyncStorage.setItem(THEME_STORAGE_KEY, pref);
   };
+
+  const setColorScheme = (scheme: ColorScheme) => {
+    setThemePreference(scheme);
+  };
+
+  const toggleTheme = () => {
+    const newScheme = colorScheme === "light" ? "dark" : "light";
+    setThemePreference(newScheme);
+  };
+
+  if (!isLoaded) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider
-      value={{ theme, colorScheme, toggleTheme, setColorScheme }}
+      value={{
+        theme,
+        colorScheme,
+        themePreference,
+        toggleTheme,
+        setColorScheme,
+        setThemePreference,
+      }}
     >
       {children}
     </ThemeContext.Provider>

@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { wordsService } from "../../services/words.service";
 import { CreateWordInput, UpdateWordInput } from "../../types";
 
-// Query keys
 const WORDS_KEYS = {
   all: ["words"] as const,
   list: (filters?: { bookId?: string; isArchived?: boolean }) =>
@@ -11,7 +10,6 @@ const WORDS_KEYS = {
   due: ["words", "due"] as const,
 };
 
-// Queries
 export function useWords(options?: { bookId?: string; isArchived?: boolean }) {
   return useQuery({
     queryKey: WORDS_KEYS.list(options),
@@ -23,7 +21,7 @@ export function useWord(wordId: string) {
   return useQuery({
     queryKey: WORDS_KEYS.detail(wordId),
     queryFn: () => wordsService.getSingleWord(wordId),
-    enabled: !!wordId, // Does NOT fetch if wordId not passed
+    enabled: !!wordId,
   });
 }
 
@@ -34,15 +32,14 @@ export function useDueWords() {
   });
 }
 
-// Mutations
 export function useAddWord() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (newWord: CreateWordInput) => wordsService.addNewWord(newWord),
     onSuccess: () => {
-      // Invalidate all word lists so they refetch
       queryClient.invalidateQueries({ queryKey: WORDS_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
     },
   });
 }
@@ -54,9 +51,9 @@ export function useUpdateWord() {
     mutationFn: ({ wordId, data }: { wordId: string; data: UpdateWordInput }) =>
       wordsService.updateWord(wordId, data),
     onSuccess: (_, { wordId }) => {
-      // Invalidate this specific word and the lists
       queryClient.invalidateQueries({ queryKey: WORDS_KEYS.detail(wordId) });
       queryClient.invalidateQueries({ queryKey: WORDS_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
     },
   });
 }
@@ -68,6 +65,21 @@ export function useDeleteWord() {
     mutationFn: (wordId: string) => wordsService.deleteWord(wordId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: WORDS_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
     },
+  });
+}
+
+export function useReviewWord() {
+  return useMutation({
+    mutationFn: ({
+      wordId,
+      review,
+    }: {
+      wordId: string;
+      review: { quality: number };
+    }) => wordsService.reviewWord(wordId, review),
+    // intentionally dont invalidate queiries her since review session manages local queue
+    // Queries will be invalidated when the user leaves the review session.
   });
 }
