@@ -52,11 +52,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAppleSignIn();
   }, []);
 
-  // Google OAuth configuration
-  // For iOS OAuth clients, use the bundle ID-based redirect URI
+  // Google OAuth: set EXPO_PUBLIC_GOOGLE_CLIENT_ID and EXPO_PUBLIC_GOOGLE_REDIRECT_URI in .env
   const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
-  // iOS clients use bundle-based redirect URIs
-  const redirectUri = `com.kyak15.wordshelf:/`;
+  const redirectUri =
+    process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI || "com.kyak15.wordshelf:/";
 
   const googleAuth = useGoogleAuth({
     clientId,

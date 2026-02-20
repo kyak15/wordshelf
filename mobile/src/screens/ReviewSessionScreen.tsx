@@ -51,7 +51,6 @@ export const ReviewSessionScreen: React.FC = () => {
     if (dueWords && dueWords.length > 0 && !sessionInitialized.current) {
       sessionInitialized.current = true;
       setSessionQueue([...dueWords]);
-      console.log(`[Session] Initialized with ${dueWords.length} words`);
     }
   }, [dueWords]);
 
@@ -101,10 +100,6 @@ export const ReviewSessionScreen: React.FC = () => {
     const isRequeue = quality === 0 || quality === 3;
     const wordToRequeue = isRequeue ? currentWord : null;
 
-    console.log(
-      `[Review] Quality: ${quality}, isRequeue: ${isRequeue}, currentIndex: ${currentIndex}, queueLength: ${sessionQueue.length}`,
-    );
-
     try {
       // Submit review to backend
       await reviewMutation.mutateAsync({
@@ -118,30 +113,20 @@ export const ReviewSessionScreen: React.FC = () => {
         let newQueue = [...sessionQueue];
         if (wordToRequeue) {
           newQueue = [...newQueue, wordToRequeue];
-          console.log(
-            `[Review] Re-queued word: ${wordToRequeue.text}, new queue length: ${newQueue.length}`,
-          );
         }
 
         const nextIndex = currentIndex + 1;
-        console.log(
-          `[Review] nextIndex: ${nextIndex}, newQueue.length: ${newQueue.length}`,
-        );
 
         // Update queue state
         setSessionQueue(newQueue);
 
         // Check if there are more cards
         if (nextIndex < newQueue.length) {
-          console.log(
-            `[Review] Advancing to card at index ${nextIndex}: ${newQueue[nextIndex]?.text}`,
-          );
           // Reset flip state and advance to next card
           flipAnim.setValue(0);
           setIsFlipped(false);
           setCurrentIndex(nextIndex);
         } else {
-          console.log(`[Review] Session complete!`);
           setSessionComplete(true);
         }
 

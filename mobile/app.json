@@ -3,7 +3,7 @@
     "name": "WordShelf",
     "slug": "wordshelf",
     "version": "1.0.0",
-    "scheme": "wordshelf",
+    "scheme": "com.kyak15.wordshelf",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,18 +14,33 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "package": "com.wordvault",
+      "bundleIdentifier": "com.kyak15.wordshelf",
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "appleTeamId": "MD8ZSDNJWD"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "scheme": "com.wordvault"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kyak15.wordshelf"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-apple-authentication",
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
   }
 }

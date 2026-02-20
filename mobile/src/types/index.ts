@@ -20,7 +20,7 @@ export type ReviewOutcome = "again" | "hard" | "good" | "easy";
 
 export type ReviewMode = "srs" | "practice";
 
-export type AuthProvider = "google" | "apple" | "email";
+export type AuthProvider = "google" | "apple";
 
 // ============================================================
 // User
@@ -79,6 +79,7 @@ export interface LibraryBook {
 }
 
 export interface LibraryBookWithDetails extends LibraryBook {
+  totalPages: undefined;
   book: Book;
 }
 
@@ -331,14 +332,14 @@ export interface DictionaryApiPhonetics {
 
 export interface DictionaryApiDefinitions {
   definition: string;
-  example: string;
+  example?: string;
   synonyms?: string[];
   antonyms?: string[];
 }
 
 export interface DictionaryApiMeanings {
   partOfSpeech: string;
-  definitions: DictionaryApiDefinitions;
+  definitions: DictionaryApiDefinitions[];
 }
 
 export interface DictionaryApiResponse {

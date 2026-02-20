@@ -93,7 +93,6 @@ export const WordsScreen: React.FC = () => {
 
   const handleWordPress = (wordId: string) => {
     // TODO: Navigate to word detail or open edit modal
-    console.log("Navigate to word detail:", wordId);
   };
 
   const handleDeleteWord = (wordId: string) => {

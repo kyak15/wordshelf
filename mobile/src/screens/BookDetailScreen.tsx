@@ -123,7 +123,6 @@ export const BookDetailScreen: React.FC = () => {
 
   const handleWordPress = (wordId: string) => {
     // TODO: Navigate to word detail or show edit modal
-    console.log("Navigate to word detail:", wordId);
   };
 
   if (bookLoading || !book) {

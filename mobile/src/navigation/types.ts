@@ -10,8 +10,6 @@ export type MainTabParamList = {
 
 export type RootStackParamList = {
   Welcome: undefined;
-  EmailAuth: undefined;
-  OTPVerification: { email: string };
   Main: NavigatorScreenParams<MainTabParamList>;
   Words:
     | {
