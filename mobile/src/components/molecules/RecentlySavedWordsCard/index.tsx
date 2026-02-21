@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import SimpleWordCard from "../../atoms/SimpleWordCard";
-import { useWords } from "../../../hooks/queries/useWords";
+import { useWords } from "shared/hooks/queries/useWords";
 import { LoadingSpinner } from "../../atoms/LoadingSpinner";
 import { Text } from "../../atoms/Text";
 import { useTheme } from "../../../theme";

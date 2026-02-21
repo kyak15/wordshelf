@@ -1,0 +1,19 @@
+{
+  "name": "shared",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./config/api": "./config/api.ts",
+    "./services/api": "./services/api.ts",
+    "./services/auth.service": "./services/auth.service.ts",
+    "./services/words.service": "./services/words.service.ts",
+    "./services/stats.service": "./services/stats.service.ts",
+    "./services/library.service": "./services/library.service.ts",
+    "./services/bookSearch.service": "./services/bookSearch.service.ts",
+    "./services/wordSearch.service": "./services/wordSearch.service.ts",
+    "./hooks/queries/useWords": "./hooks/queries/useWords.ts",
+    "./hooks/queries/useStats": "./hooks/queries/useStats.ts",
+    "./hooks/queries/useLibrary": "./hooks/queries/useLibrary.ts",
+    "./types": "./types/index.ts"
+  }
+}

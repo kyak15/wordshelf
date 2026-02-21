@@ -13,7 +13,7 @@ import { Text } from "../components/atoms/Text";
 import { Spacer } from "../components/atoms/Spacer";
 import { useTheme } from "../theme";
 import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/auth.service";
+import { authService } from "shared/services/auth.service";
 
 interface SettingsRowProps {
   icon: keyof typeof Ionicons.glyphMap;

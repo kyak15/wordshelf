@@ -22,8 +22,8 @@ import {
   useLibraryBook,
   useUpdateLibraryBook,
   useDeleteLibraryBook,
-} from "../hooks/queries/useLibrary";
-import { useWords } from "../hooks/queries/useWords";
+} from "shared/hooks/queries/useLibrary";
+import { useWords } from "shared/hooks/queries/useWords";
 
 type BookDetailRouteProp = RouteProp<RootStackParamList, "BookDetail">;
 type NavigationProp = NativeStackNavigationProp<

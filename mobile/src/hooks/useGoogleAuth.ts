@@ -21,15 +21,13 @@ interface GoogleAuthResult {
  * Custom hook for Google OAuth using expo-auth-session
  * Implements PKCE (Proof Key for Code Exchange) for security
  */
-export function useGoogleAuth(config: UseGoogleAuthConfig) {
+export default function useGoogleAuth(config: UseGoogleAuthConfig) {
   const [request, setRequest] = useState<AuthSession.AuthRequest | null>(null);
   const [result, setResult] = useState<GoogleAuthResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Discovery endpoint for Google OAuth
-  const discovery = AuthSession.useAutoDiscovery(
-    "https://accounts.google.com"
-  );
+  const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com");
 
   // Initialize the auth request
   useEffect(() => {
@@ -158,7 +156,7 @@ async function generateCodeVerifier(): Promise<string> {
 async function generateCodeChallenge(verifier: string): Promise<string> {
   const digest = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
-    verifier
+    verifier,
   );
   return base64URLEncode(hexToBytes(digest));
 }
@@ -179,8 +177,5 @@ function hexToBytes(hex: string): Uint8Array {
  */
 function base64URLEncode(buffer: Uint8Array): string {
   const base64 = btoa(String.fromCharCode(...Array.from(buffer)));
-  return base64
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }

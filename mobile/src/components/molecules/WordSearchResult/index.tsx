@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "../../../theme";
 import { Text } from "../../atoms/Text";
 import { AudioButton } from "../../atoms/AudioButton";
-import { DictionaryApiResponse } from "../../../types";
+import { DictionaryApiResponse } from "shared/types";
 import AddButton from "../../atoms/AddButton";
 
 interface WordSearchResultProps {

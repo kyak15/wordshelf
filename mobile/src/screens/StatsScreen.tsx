@@ -6,8 +6,8 @@ import { Spacer } from "../components/atoms/Spacer";
 import { MasteryStatsCard } from "../components/molecules/MasteryStatsCard";
 import MilestonesCard from "../components/molecules/MilestonesCard";
 import { useTheme } from "../theme";
-import { useWords } from "../hooks/queries/useWords";
-import { useMilestones, useReviewActivity } from "../hooks/queries/useStats";
+import { useWords } from "shared/hooks/queries/useWords";
+import { useMilestones, useReviewActivity } from "shared/hooks/queries/useStats";
 import ActivityHeatmap from "../components/molecules/ActivityHeatmap";
 import { getMasteryLevelCounts } from "../constants/mastery";
 

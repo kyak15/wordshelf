@@ -1,4 +1,4 @@
-import { SavedWordRow } from "../types";
+import { SavedWordRow } from "shared/types";
 
 export interface MasteryLevel {
   level: number;

@@ -15,13 +15,13 @@ import { useTheme } from "../../../theme";
 import { Text } from "../../atoms/Text";
 import { LoadingSpinner } from "../../atoms/LoadingSpinner";
 import { WordSearchResult } from "../../molecules/WordSearchResult";
-import { DictionaryApiResponse } from "../../../types";
+import { DictionaryApiResponse } from "shared/types";
 import { useQueryClient } from "@tanstack/react-query";
 import ModalHeader from "../../molecules/ModalHeader";
 import SearchBar from "../../molecules/SearchBar";
-import { wordsService } from "../../../services/words.service";
-import { wordSearchService } from "../../../services/wordSearch.service";
-import { useLibraryBooks } from "../../../hooks/queries/useLibrary";
+import { wordsService } from "shared/services/words.service";
+import { wordSearchService } from "shared/services/wordSearch.service";
+import { useLibraryBooks } from "shared/hooks/queries/useLibrary";
 
 interface AddWordModalProps {
   visible: boolean;

@@ -10,9 +10,9 @@ import { Text } from "../../atoms/Text";
 import { BookCard } from "../../molecules/BookCard";
 import { MiniProgressCard } from "../../molecules/MiniProgressCard";
 import RecentlySavedWordsCard from "../../molecules/RecentlySavedWordsCard";
-import { useLibraryBooks } from "../../../hooks/queries/useLibrary";
-import { useWords } from "../../../hooks/queries/useWords";
-import { useStreak, useWeeklyReviews } from "../../../hooks/queries/useStats";
+import { useLibraryBooks } from "shared/hooks/queries/useLibrary";
+import { useWords } from "shared/hooks/queries/useWords";
+import { useStreak, useWeeklyReviews } from "shared/hooks/queries/useStats";
 import GreetingCard from "../../atoms/GreetingCard";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

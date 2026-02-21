@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { BookCard } from "../BookCard";
 import { SectionHeader } from "../../atoms/SectionHeader";
-import { useLibraryBooks } from "../../../hooks/queries/useLibrary";
+import { useLibraryBooks } from "shared/hooks/queries/useLibrary";
 
 interface WordsByBookCardProps {
   wordCountsByBook?: Record<string, number>; // bookId -> wordCount

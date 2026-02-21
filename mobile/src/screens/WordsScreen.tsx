@@ -11,9 +11,10 @@ import {
 import { SwipeableWordCard } from "../components/molecules/SwipeableWordCard";
 import { Text } from "../components/atoms/Text";
 import { LoadingSpinner } from "../components/atoms/LoadingSpinner";
-import { useWords, useDeleteWord } from "../hooks/queries/useWords";
-import { useLibraryBooks } from "../hooks/queries/useLibrary";
+import { useWords, useDeleteWord } from "shared/hooks/queries/useWords";
+import { useLibraryBooks } from "shared/hooks/queries/useLibrary";
 import { useTheme } from "../theme";
+import { LibraryBookWithDetails, SavedWordRow } from "shared/types";
 
 type WordsScreenRouteProp = RouteProp<RootStackParamList, "Words">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Words">;
@@ -58,10 +59,11 @@ export const WordsScreen: React.FC = () => {
     filters.push({ id: "divider", label: "───" });
 
     // Add each book as a filter
-    books.forEach((book) => {
+    books.forEach((book: LibraryBookWithDetails) => {
       const wordCount =
-        words?.filter((w) => w.library_book_id === book.library_book_id)
-          .length || 0;
+        words?.filter(
+          (w: SavedWordRow) => w.library_book_id === book.library_book_id,
+        ).length || 0;
 
       // Only show books that have words
       if (wordCount > 0) {
@@ -74,7 +76,7 @@ export const WordsScreen: React.FC = () => {
   }
 
   // Filter words based on active filter
-  const filteredWords = words?.filter((word) => {
+  const filteredWords = words?.filter((word: SavedWordRow) => {
     if (activeFilter === "all") return true;
 
     if (activeFilter.startsWith("mastery_")) {

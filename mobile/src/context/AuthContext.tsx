@@ -3,8 +3,10 @@ import * as React from "react";
 import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Platform } from "react-native";
-import { authService } from "../services/auth.service";
-import { useGoogleAuth } from "../hooks/useGoogleAuth";
+import { getApiClient } from "shared/services/api";
+import { authService } from "shared/services/auth.service";
+import { initApiClientMobile } from "../lib/apiMobile";
+import useGoogleAuth from "../hooks/useGoogleAuth";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -36,10 +38,40 @@ const AuthContext = React.createContext({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<AuthError | null>(null);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] =
     React.useState(false);
+
+  // Init shared API client and restore user from stored tokens
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        initApiClientMobile();
+        const client = getApiClient();
+        await client.initialize();
+        if (cancelled) return;
+        if (client.hasTokens()) {
+          const u = await authService.getCurrentUser();
+          if (cancelled) return;
+          setUser({
+            id: u.user_id,
+            email: u.email ?? "",
+            name: u.display_name ?? u.email ?? "User",
+            provider: "google",
+          });
+        }
+      } catch {
+        // No stored session or invalid tokens
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Check Apple Sign In availability on mount
   React.useEffect(() => {

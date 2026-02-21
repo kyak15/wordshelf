@@ -5,7 +5,7 @@ import { BookThumbnail } from "../../atoms/BookThumbnail";
 import { BookCardInfo } from "../../atoms/BookCardInfo";
 import { BookCardProgress } from "../../atoms/BookCardProgress";
 import { Text } from "../../atoms/Text";
-import { LibraryBookWithDetails } from "../../../types";
+import { LibraryBookWithDetails } from "shared/types";
 
 interface BookCardProps {
   book: LibraryBookWithDetails;

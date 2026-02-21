@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../theme";
 import { Text } from "../../atoms/Text";
-import { GoogleBookResult } from "../../../types";
+import { GoogleBookResult } from "shared/types";
 import { BookThumbnail } from "../../atoms/BookThumbnail";
 import { BookCardInfo } from "../../atoms/BookCardInfo";
 import AddButton from "../../atoms/AddButton";

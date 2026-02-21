@@ -3,7 +3,7 @@ import { StyleSheet, Animated, Alert, TouchableOpacity } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { SavedWordCard } from "../SavedWordCard";
-import { SavedWordRow } from "../../../types";
+import { SavedWordRow } from "shared/types";
 import { useTheme } from "../../../theme";
 
 interface SwipeableWordCardProps {
