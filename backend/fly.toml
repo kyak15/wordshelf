@@ -1,0 +1,16 @@
+# fly.toml for Wordshelf API - https://fly.io/docs/reference/configuration/
+
+app = "wordshelf-api"
+
+[build]
+
+[env]
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  process_concurrency = 1
