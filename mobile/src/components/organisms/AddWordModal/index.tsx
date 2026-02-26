@@ -514,6 +514,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scrollContent: {
+    paddingTop: 16,
     paddingBottom: 24,
   },
   emptyState: {

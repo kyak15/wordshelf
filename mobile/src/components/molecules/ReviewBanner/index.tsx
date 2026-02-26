@@ -33,7 +33,7 @@ export const ReviewBanner: React.FC<ReviewBannerProps> = ({
           <Ionicons name="flash" size={32} color="#FFFFFF" />
         </View>
         <View style={styles.textContainer}>
-          <Text variant="h2" style={styles.title}>
+          <Text variant="body" style={styles.title}>
             {wordsDue} {wordsDue === 1 ? "word" : "words"} due for review
           </Text>
           <Text variant="body" style={styles.subtitle}>
@@ -72,6 +72,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
     marginBottom: 4,
+    fontSize: 22,
   },
   subtitle: {
     color: "#FFFFFF",
