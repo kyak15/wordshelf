@@ -1,19 +1,16 @@
 import React from "react";
-import { View, Text as RNText, StyleSheet } from "react-native";
-import { useTheme } from "../../../theme";
+import { View, Image, StyleSheet } from "react-native";
 
 interface AppLogoProps {
   size?: "small" | "medium" | "large";
 }
 
+const logoSource = require("../../../../assets/wordvault-icon.jpg");
+
 /**
- * App Logo Placeholder
- * TODO: Replace with actual logo image
+ * App Logo – Word Vault WV lettermark
  */
-
 export default function AppLogo({ size = "medium" }: AppLogoProps) {
-  const { theme } = useTheme();
-
   const getContainerStyle = () => {
     switch (size) {
       case "small":
@@ -25,31 +22,15 @@ export default function AppLogo({ size = "medium" }: AppLogoProps) {
     }
   };
 
-  const getTextStyle = () => {
-    switch (size) {
-      case "small":
-        return styles.textSmall;
-      case "large":
-        return styles.textLarge;
-      default:
-        return styles.textMedium;
-    }
-  };
+  const dimensions = getContainerStyle();
 
   return (
-    <View
-      style={[
-        styles.container,
-        getContainerStyle(),
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.divider,
-        },
-      ]}
-    >
-      <RNText style={[getTextStyle(), { color: theme.colors.accent }]}>
-        W
-      </RNText>
+    <View style={[styles.container, dimensions]}>
+      <Image
+        source={logoSource}
+        style={[dimensions, styles.image]}
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -58,8 +39,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 20,
-    borderWidth: 2,
+    overflow: "hidden",
   },
   containerSmall: {
     width: 48,
@@ -73,16 +53,9 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
   },
-  textSmall: {
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  textMedium: {
-    fontSize: 40,
-    fontWeight: "700",
-  },
-  textLarge: {
-    fontSize: 60,
-    fontWeight: "700",
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
   },
 });
