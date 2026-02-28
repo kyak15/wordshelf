@@ -5,6 +5,7 @@
 [build]
   base = "web"
   command = "npm run build"
+  publish = "web/.netlify"
 
 # Essential: run Next.js on Netlify (handles SSR and routes like /)
 [[plugins]]
