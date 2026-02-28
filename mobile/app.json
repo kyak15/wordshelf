@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "WordShelf",
-    "slug": "wordshelf",
+    "name": "WordVault",
+    "slug": "WordVault",
     "version": "1.0.0",
     "scheme": "com.kyak15.wordshelf",
     "orientation": "portrait",
