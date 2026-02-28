@@ -6,6 +6,7 @@ import {
   Switch,
   Alert,
   ScrollView,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -102,7 +103,15 @@ export const ProfileScreen: React.FC = () => {
     ]);
   };
 
-  const handleDeleteAccount = () => {
+  const LEGAL_URLS = {
+  terms: "https://wordvaultvocab.netlify.app/terms",
+  privacy: "https://wordvaultvocab.netlify.app/privacy",
+} as const;
+
+const openTerms = () => Linking.openURL(LEGAL_URLS.terms);
+const openPrivacy = () => Linking.openURL(LEGAL_URLS.privacy);
+
+const handleDeleteAccount = () => {
     Alert.alert(
       "Delete Account",
       "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.",
@@ -212,6 +221,32 @@ export const ProfileScreen: React.FC = () => {
               icon="log-out-outline"
               label="Sign Out"
               onPress={handleSignOut}
+            />
+          </View>
+        </View>
+
+        <Spacer size="lg" />
+
+        {/* Legal */}
+        <View style={styles.section}>
+          <Text variant="caption" color="secondary" style={styles.sectionTitle}>
+            LEGAL
+          </Text>
+          <View
+            style={[
+              styles.settingsCard,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <SettingsRow
+              icon="document-text-outline"
+              label="Terms of Service"
+              onPress={openTerms}
+            />
+            <SettingsRow
+              icon="shield-checkmark-outline"
+              label="Privacy Policy"
+              onPress={openPrivacy}
             />
           </View>
         </View>

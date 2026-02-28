@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, Linking, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -75,6 +75,47 @@ export const WelcomeScreen: React.FC = () => {
             }
             loadingProvider={loadingProvider}
           />
+          <Spacer size="md" />
+          <View style={styles.legalRow}>
+            <View style={styles.legalTextRow}>
+              <Text variant="caption" color="secondary">
+                By continuing, you agree to our{" "}
+              </Text>
+              <Pressable
+                onPress={() =>
+                  Linking.openURL("https://wordvaultvocab.netlify.app/terms")
+                }
+                hitSlop={8}
+              >
+                <Text
+                  variant="caption"
+                  style={[styles.legalLink, { color: theme.colors.accent }]}
+                >
+                  Terms of Service
+                </Text>
+              </Pressable>
+              <Text variant="caption" color="secondary">
+                {" "}
+                and{" "}
+              </Text>
+              <Pressable
+                onPress={() =>
+                  Linking.openURL("https://wordvaultvocab.netlify.app/privacy")
+                }
+                hitSlop={8}
+              >
+                <Text
+                  variant="caption"
+                  style={[styles.legalLink, { color: theme.colors.accent }]}
+                >
+                  Privacy Policy
+                </Text>
+              </Pressable>
+              <Text variant="caption" color="secondary">
+                .
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -97,5 +138,18 @@ const styles = StyleSheet.create({
   },
   authSection: {
     paddingBottom: 48,
+  },
+  legalRow: {
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  legalTextRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  legalLink: {
+    textDecorationLine: "underline",
   },
 });
