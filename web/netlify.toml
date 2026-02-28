@@ -3,7 +3,7 @@
 
 [build]
   command = "npm run build"
-  publish = ".netlify"
+  publish = ".next"
 
 # Next.js plugin handles SSR and routes
 [[plugins]]
