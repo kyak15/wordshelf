@@ -5,8 +5,7 @@ export default function HomeTopCard() {
     <div>
       {/* currently Reading */}
       <div>
-        <BookThumbnail />
-        
+        <BookThumbnail uri={""} size="medium" />
       </div>
     </div>
   );
