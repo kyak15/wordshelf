@@ -2,9 +2,9 @@
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 
 [build]
-  base = "web"
   command = "npm run build"
+  publish = ".netlify"
 
-# Next.js plugin sets publish dir itself — do not set "Publish directory" in Netlify UI
+# Next.js plugin handles SSR and routes
 [[plugins]]
   package = "@netlify/plugin-nextjs"
