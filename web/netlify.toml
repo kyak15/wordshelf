@@ -5,6 +5,6 @@
   base = "web"
   command = "npm run build"
 
-# Next.js plugin handles publish directory and server-side features
+# Next.js plugin sets publish dir itself — do not set "Publish directory" in Netlify UI
 [[plugins]]
   package = "@netlify/plugin-nextjs"
