@@ -1,0 +1,10 @@
+# Netlify config for WordVault web (Next.js in monorepo)
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  base = "web"
+  command = "npm run build"
+
+# Next.js plugin handles publish directory and server-side features
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
