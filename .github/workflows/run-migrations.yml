@@ -1,3 +1,4 @@
+# Action for DB Migrations
 name: Run Database Migrations
 
 on:
