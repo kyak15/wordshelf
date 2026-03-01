@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        # utilize fly dashboard created token
       - name: Setup Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
         env:
