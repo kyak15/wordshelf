@@ -20,6 +20,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug - Check if token exists
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "FLY_API_TOKEN is empty or not set"
+            exit 1
+          else
+            echo "FLY_API_TOKEN is set (length: ${#FLY_API_TOKEN})"
+          fi
+
       - name: Setup Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
