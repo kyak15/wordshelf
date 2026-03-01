@@ -23,11 +23,14 @@ jobs:
 
       - name: Debug - Check if token exists
         run: |
+          echo "Checking FLY_API_TOKEN..."
+          echo "GITHUB_TOKEN exists: ${{ secrets.GITHUB_TOKEN != '' }}"
+          echo "FLY_API_TOKEN exists in secrets: ${{ secrets.FLY_API_TOKEN != '' }}"
           if [ -z "$FLY_API_TOKEN" ]; then
-            echo "FLY_API_TOKEN is empty or not set"
+            echo "❌ FLY_API_TOKEN is empty or not set in env"
             exit 1
           else
-            echo "FLY_API_TOKEN is set (length: ${#FLY_API_TOKEN})"
+            echo "✅ FLY_API_TOKEN is set (length: ${#FLY_API_TOKEN})"
           fi
 
       - name: Setup Fly.io CLI
