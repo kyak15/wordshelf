@@ -13,20 +13,19 @@ jobs:
     name: Deploy API to Fly.io
     runs-on: ubuntu-latest
     
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # utilize fly dashboard created token
+
       - name: Setup Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only
         working-directory: ./backend
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Verify deployment
         run: |
