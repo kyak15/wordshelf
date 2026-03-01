@@ -104,14 +104,14 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const LEGAL_URLS = {
-  terms: "https://wordvaultvocab.netlify.app/terms",
-  privacy: "https://wordvaultvocab.netlify.app/privacy",
-} as const;
+    terms: "https://wordvaultvocab.netlify.app/terms",
+    privacy: "https://wordvaultvocab.netlify.app/privacy",
+  } as const;
 
-const openTerms = () => Linking.openURL(LEGAL_URLS.terms);
-const openPrivacy = () => Linking.openURL(LEGAL_URLS.privacy);
+  const openTerms = () => Linking.openURL(LEGAL_URLS.terms);
+  const openPrivacy = () => Linking.openURL(LEGAL_URLS.privacy);
 
-const handleDeleteAccount = () => {
+  const handleDeleteAccount = () => {
     Alert.alert(
       "Delete Account",
       "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.",
@@ -129,12 +129,12 @@ const handleDeleteAccount = () => {
                 "Error",
                 error instanceof Error
                   ? error.message
-                  : "Failed to delete account"
+                  : "Failed to delete account",
               );
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -211,11 +211,11 @@ const handleDeleteAccount = () => {
           <Text variant="caption" color="secondary" style={styles.sectionTitle}>
             ACCOUNT
           </Text>
-            <View
-              style={[
-                styles.settingsCard,
-                { backgroundColor: theme.colors.surface },
-              ]}
+          <View
+            style={[
+              styles.settingsCard,
+              { backgroundColor: theme.colors.surface },
+            ]}
           >
             <SettingsRow
               icon="log-out-outline"
@@ -277,7 +277,7 @@ const handleDeleteAccount = () => {
 
         {/* App Version */}
         <Text variant="caption" color="secondary" center>
-          WordShelf v1.0.0
+          WordVault v1.0.0
         </Text>
       </ScrollView>
     </SafeAreaView>
