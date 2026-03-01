@@ -1,0 +1,46 @@
+name: Build & Submit Mobile App
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.2.3, etc.
+
+jobs:
+  build-ios:
+    name: Build iOS and Submit to TestFlight
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./mobile
+
+      - name: Build iOS app
+        run: eas build --platform ios --profile production --non-interactive --no-wait
+        working-directory: ./mobile
+
+      - name: Submit to TestFlight
+        run: eas submit --platform ios --latest --non-interactive
+        working-directory: ./mobile
+
+      - name: Build completed
+        run: |
+          echo "✅ iOS build triggered successfully"
+          echo "✅ Submitted to TestFlight for internal testing"
+          echo "⚠️  Manual App Store submission required after testing"
