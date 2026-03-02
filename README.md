@@ -2,9 +2,9 @@
 
 WordVault is a vocabulary learning application designed for readers who want to remember and master new words they encounter while reading. The app combines vocabulary tracking with spaced repetition to help users build a lasting vocabulary from the books they read.
 
-<p align="center">
-  <img src="mobile/assets/wordvault-icon.jpg" alt="WordVault Logo" width="200"/>
-</p>
+## Overview
+
+When you come across an unfamiliar word in a book, WordVault lets you save it along with its definition and context. The app then uses spaced repetition to help you review and retain these words over time. Each word is associated with the book you found it in, allowing you to track your vocabulary growth across your reading journey.
 
 ## Screenshots
 
@@ -19,10 +19,6 @@ WordVault is a vocabulary learning application designed for readers who want to 
   <img src="docs/screenshots/book-detail.png" alt="Book Detail" width="250"/>
   <img src="docs/screenshots/stats.png" alt="Statistics" width="250"/>
 </p>
-
-## Overview
-
-When you come across an unfamiliar word in a book, WordVault lets you save it along with its definition and context. The app then uses spaced repetition to help you review and retain these words over time. Each word is associated with the book you found it in, allowing you to track your vocabulary growth across your reading journey.
 
 ## Features
 
