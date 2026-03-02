@@ -121,7 +121,7 @@ export default function Home() {
               App Store
             </Link>
             <Link
-              href="/auth/signin/google"
+              href="/login"
               className="text-sm font-medium text-primary-text underline decoration-accent/60 underline-offset-2 hover:decoration-accent"
             >
               Sign in
