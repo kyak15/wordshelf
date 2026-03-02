@@ -18,5 +18,9 @@ export const GOOGLE_BOOKS_API_URL =
 export function getGoogleBooksApiKey(): string {
   if (typeof process === "undefined") return "";
   const env = process.env as Record<string, string | undefined>;
-  return env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY ?? env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY ?? "";
+  return (
+    env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY ??
+    env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY ??
+    ""
+  );
 }
