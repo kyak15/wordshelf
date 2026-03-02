@@ -1,10 +1,3 @@
-// Atoms used:
-// Image (Book cover)
-// Heading (Book title)
-// Text (Author)
-// Text (Page progress)
-// Button (Continue Reading)
-
 import BookThumbnail from "../../atoms/BookThumbnail";
 import Text from "../../atoms/Text";
 

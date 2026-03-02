@@ -7,12 +7,16 @@ import { authService } from "shared/services/auth.service";
 
 function CallbackContent() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"exchanging" | "done" | "error">("exchanging");
+  const [status, setStatus] = useState<"exchanging" | "done" | "error">(
+    "exchanging",
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const code = searchParams.get("code");
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (typeof window !== "undefined" ? window.location.origin : "");
     const redirectUri = `${appUrl.replace(/\/$/, "")}/auth/callback`;
 
     if (!code) {
@@ -29,12 +33,14 @@ function CallbackContent() {
         await authService.googleExchange(code, undefined, redirectUri);
         if (!cancelled) {
           setStatus("done");
-          window.location.href = "/";
+          window.location.href = "/Home";
         }
       } catch (err) {
         if (!cancelled) {
           setStatus("error");
-          setErrorMessage(err instanceof Error ? err.message : "Sign-in failed.");
+          setErrorMessage(
+            err instanceof Error ? err.message : "Sign-in failed.",
+          );
         }
       }
     })();
@@ -45,11 +51,13 @@ function CallbackContent() {
   }, [searchParams]);
 
   if (status === "error") {
+    const loginUrl = `/login?error=${encodeURIComponent(errorMessage ?? "Sign-in failed")}`;
+    if (typeof window !== "undefined") window.location.replace(loginUrl);
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-red-600">{errorMessage}</p>
-        <a href="/" className="text-sm underline">
-          Back to home
+        <a href="/login" className="text-sm underline">
+          Back to sign in
         </a>
       </div>
     );
