@@ -1,7 +1,38 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const { user, status } = useAuth();
+  const errorParam = searchParams.get("error");
+
+  useEffect(() => {
+    if (status === "authenticated" && user) {
+      window.location.replace("/Home");
+    }
+  }, [status, user]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-secondary-text">Loading…</p>
+      </div>
+    );
+  }
+
+  if (status === "authenticated") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-secondary-text">Redirecting to home…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm text-center">
@@ -28,6 +59,13 @@ export default function LoginPage() {
         <p className="mt-2 text-sm text-secondary-text">
           Use your Google account to get started and sync across devices.
         </p>
+
+        {/* Error message when sign-in failed */}
+        {errorParam && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400">
+            {decodeURIComponent(errorParam)}
+          </div>
+        )}
 
         {/* Google button */}
         <Link
@@ -60,5 +98,19 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <p className="text-secondary-text">Loading…</p>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
