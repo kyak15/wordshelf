@@ -39,7 +39,7 @@ export const bookSearchService = {
    */
   async searchBooks(
     query: string,
-    maxResults: number = 10
+    maxResults: number = 10,
   ): Promise<GoogleBookResult[]> {
     if (!query.trim()) {
       return [];
