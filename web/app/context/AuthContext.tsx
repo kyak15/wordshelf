@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         initApiClientWeb();
         const client = getApiClient();
+        await client.initialize();
         if (client.hasTokens()) {
           const me = await authService.getCurrentUser();
           if (!cancelled) setUser(userToAuthUser(me));
@@ -100,7 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     async (url: string, options?: RequestInit) => {
       return fetch(url, options);
     },
-    []
+    [],
   );
 
   const status = isLoading

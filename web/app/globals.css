@@ -12,6 +12,18 @@
   --foreground: #2e2a24;
 }
 
+/* Dark theme – applied when html has data-theme="dark" (from ThemeContext) */
+html[data-theme="dark"] {
+  --background: #12110f;
+  --surface: #1c1a17;
+  --primary-text: #f2efe9;
+  --secondary-text: #b8b3a8;
+  --accent: #d6b35e;
+  --success: #5f8c73;
+  --divider: #2a2722;
+  --foreground: #f2efe9;
+}
+
 @theme inline {
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
@@ -22,19 +34,6 @@
   --color-success: var(--success);
   --color-divider: var(--divider);
   --color-foreground: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #12110f;
-    --surface: #1c1a17;
-    --primary-text: #f2efe9;
-    --secondary-text: #b8b3a8;
-    --accent: #d6b35e;
-    --success: #5f8c73;
-    --divider: #2a2722;
-    --foreground: #f2efe9;
-  }
 }
 
 body {

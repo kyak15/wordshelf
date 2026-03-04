@@ -50,13 +50,13 @@ export default function FeaturesCarousel({
       <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-12">
         {/* Copy */}
         <div className="min-w-0 flex-1 text-center md:text-left">
-          <span className="text-sm font-medium uppercase tracking-wider text-accent">
+          <span className="text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-primary-text sm:text-3xl">
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--primary-text)] sm:text-3xl">
             {current.title}
           </h3>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-secondary-text sm:text-lg">
+          <p className="mt-4 max-w-md text-base leading-relaxed text-[var(--secondary-text)] sm:text-lg">
             {current.description}
           </p>
         </div>
@@ -64,7 +64,7 @@ export default function FeaturesCarousel({
         {/* Screenshot */}
         <div className="flex flex-1 justify-center">
           <div className="relative w-full max-w-[220px] sm:max-w-[260px]">
-            <div className="overflow-hidden rounded-2xl bg-surface shadow-xl ring-1 ring-divider">
+            <div className="overflow-hidden rounded-2xl bg-[var(--surface)] shadow-xl ring-1 ring-[var(--divider)]">
               <div className="aspect-[9/19] w-full">
                 <Image
                   key={current.id}
@@ -88,7 +88,7 @@ export default function FeaturesCarousel({
           <button
             type="button"
             onClick={prev}
-            className="flex size-10 items-center justify-center rounded-full border border-divider bg-surface text-primary-text transition-colors hover:border-accent/50 hover:bg-surface/80 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50"
+            className="flex size-10 items-center justify-center rounded-full border border-[var(--divider)] bg-[var(--surface)] text-[var(--primary-text)] transition-colors hover:border-[var(--accent)]/50 hover:bg-[var(--surface)]/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)] disabled:opacity-50"
             aria-label="Previous feature"
           >
             <svg
@@ -119,10 +119,10 @@ export default function FeaturesCarousel({
                 aria-selected={i === index}
                 aria-label={`Go to feature ${i + 1}`}
                 onClick={() => goTo(i)}
-                className={`size-2.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background ${
+                className={`size-2.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)] ${
                   i === index
-                    ? "bg-accent scale-110"
-                    : "bg-divider hover:bg-secondary-text/40"
+                    ? "scale-110 bg-[var(--accent)]"
+                    : "bg-[var(--divider)] hover:bg-[var(--secondary-text)]/40"
                 }`}
               />
             ))}
@@ -130,7 +130,7 @@ export default function FeaturesCarousel({
           <button
             type="button"
             onClick={next}
-            className="flex size-10 items-center justify-center rounded-full border border-divider bg-surface text-primary-text transition-colors hover:border-accent/50 hover:bg-surface/80 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50"
+            className="flex size-10 items-center justify-center rounded-full border border-[var(--divider)] bg-[var(--surface)] text-[var(--primary-text)] transition-colors hover:border-[var(--accent)]/50 hover:bg-[var(--surface)]/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)] disabled:opacity-50"
             aria-label="Next feature"
           >
             <svg
