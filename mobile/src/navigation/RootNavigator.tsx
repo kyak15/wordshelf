@@ -50,6 +50,8 @@ export const RootNavigator: React.FC = () => {
               options={{
                 headerShown: true,
                 title: "All Words",
+                headerStyle: { backgroundColor: theme.colors.background },
+                headerTintColor: theme.colors.primaryText,
               }}
             />
             <Stack.Screen

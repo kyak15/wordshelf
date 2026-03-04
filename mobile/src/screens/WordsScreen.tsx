@@ -58,18 +58,17 @@ export const WordsScreen: React.FC = () => {
   if (books && books.length > 0) {
     filters.push({ id: "divider", label: "───" });
 
-    // Add each book as a filter
+    // Add each book as a filter (only if it has saved words)
     books.forEach((book: LibraryBookWithDetails) => {
       const wordCount =
         words?.filter(
           (w: SavedWordRow) => w.library_book_id === book.library_book_id,
         ).length || 0;
 
-      // Only show books that have words
       if (wordCount > 0) {
         filters.push({
           id: `book_${book.library_book_id}`,
-          label: `${book.book.title} (${wordCount})`,
+          label: book.book.title,
         });
       }
     });
