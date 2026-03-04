@@ -4,15 +4,12 @@ import { useEffect } from "react";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
-/**
- * Redirects to Google OAuth. Set in .env:
- * - NEXT_PUBLIC_GOOGLE_CLIENT_ID
- * - NEXT_PUBLIC_APP_URL (e.g. http://localhost:3000 for dev)
- */
 export default function SignInGooglePage() {
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (typeof window !== "undefined" ? window.location.origin : "");
     const redirectUri = `${appUrl.replace(/\/$/, "")}/auth/callback`;
 
     if (!clientId) {

@@ -10,7 +10,7 @@ interface BookThumbnailProps {
 const sizeConfig: Record<ThumbnailSize, { width: number; height: number }> = {
   small: { width: 48, height: 72 },
   medium: { width: 64, height: 96 },
-  large: { width: 96, height: 144 },
+  large: { width: 144, height: 222 },
 };
 
 export default function BookThumbnail({
@@ -22,7 +22,7 @@ export default function BookThumbnail({
   if (!uri) {
     return (
       <div
-        className="flex items-center justify-center rounded bg-neutral-200 dark:bg-neutral-700"
+        className="flex items-center justify-center rounded bg-[var(--divider)]"
         style={{
           width: dimensions.width,
           height: dimensions.height,

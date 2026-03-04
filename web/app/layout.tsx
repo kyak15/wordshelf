@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { QueryProviderWeb } from "./providers/QueryProviderWeb";
+import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
+import TopNav from "./components/molecules/TopNav";
+import { ThemeScript } from "@/app/components/ThemeScript";
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -22,10 +25,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={fontSans.variable}>
+    <html lang="en" className={fontSans.variable} suppressHydrationWarning>
       <body className="min-h-screen antialiased font-[var(--font-plus-jakarta)]">
+        <ThemeScript />
         <QueryProviderWeb>
-          <AuthProvider>{children}</AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <TopNav />
+              {children}
+            </AuthProvider>
+          </ThemeProvider>
         </QueryProviderWeb>
       </body>
     </html>
