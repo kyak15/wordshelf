@@ -277,7 +277,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* App Version */}
         <Text variant="caption" color="secondary" center>
-          WordVault v1.0.0
+          WordVault v1.0.1
         </Text>
       </ScrollView>
     </SafeAreaView>

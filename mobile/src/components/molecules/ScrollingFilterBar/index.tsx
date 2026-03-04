@@ -18,6 +18,7 @@ export const ScrollingFilterBar: React.FC<ScrollingFilterBarProps> = ({
   activeFilterId,
   onFilterSelect,
 }) => {
+  console.log(filters);
   return (
     <View style={styles.container}>
       <ScrollView
