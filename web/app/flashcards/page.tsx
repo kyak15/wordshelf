@@ -24,11 +24,7 @@ type FilterId = string;
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text
-      as="div"
-      color="primary"
-      className="mb-2 text-lg font-semibold"
-    >
+    <Text as="div" color="primary" className="mb-2 text-lg font-semibold">
       {title}
     </Text>
   );
@@ -43,10 +39,7 @@ export default function Flashcards() {
 
   const isLoading = wordsLoading || booksLoading;
 
-  const masteryLevels = useMemo(
-    () => getMasteryLevelCounts(words),
-    [words]
-  );
+  const masteryLevels = useMemo(() => getMasteryLevelCounts(words), [words]);
 
   const wordCountsByBook = useMemo(() => {
     if (!words?.length) return {} as Record<string, number>;
@@ -85,7 +78,7 @@ export default function Flashcards() {
     if (activeFilter.startsWith(FILTER_MASTERY_PREFIX)) {
       const level = Number(activeFilter.replace(FILTER_MASTERY_PREFIX, ""));
       return words.filter((w) =>
-        level === 3 ? w.mastery_level >= 3 : w.mastery_level === level
+        level === 3 ? w.mastery_level >= 3 : w.mastery_level === level,
       );
     }
     if (activeFilter.startsWith(FILTER_BOOK_PREFIX)) {
@@ -99,8 +92,7 @@ export default function Flashcards() {
     dueWords?.filter(
       (w) =>
         !w.is_archived &&
-        (w.next_review_at == null ||
-          new Date(w.next_review_at) <= new Date())
+        (w.next_review_at == null || new Date(w.next_review_at) <= new Date()),
     ).length ?? 0;
 
   if (isLoading) {
@@ -131,9 +123,7 @@ export default function Flashcards() {
   }
 
   const booksWithWords =
-    books?.filter(
-      (b) => (wordCountsByBook[b.library_book_id] ?? 0) > 0
-    ) ?? [];
+    books?.filter((b) => (wordCountsByBook[b.library_book_id] ?? 0) > 0) ?? [];
 
   return (
     <div className="flex flex-col gap-6 p-4 pb-8">
@@ -145,7 +135,8 @@ export default function Flashcards() {
         <section className="rounded-2xl border border-[var(--accent)] bg-[var(--surface)] p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Text as="p" color="primary" className="font-medium">
-              {wordsDueCount} {wordsDueCount === 1 ? "word" : "words"} due for review
+              {wordsDueCount} {wordsDueCount === 1 ? "word" : "words"} due for
+              review
             </Text>
             <Link
               href="/flashcards/review"
@@ -208,16 +199,28 @@ export default function Flashcards() {
                     size="small"
                   />
                   <div className="min-w-0 flex-1">
-                    <Text as="p" color="primary" className="truncate font-medium">
+                    <Text
+                      as="p"
+                      color="primary"
+                      className="truncate font-medium"
+                    >
                       {book.book?.title ?? "Unknown"}
                     </Text>
                     {book.book?.author && (
-                      <Text as="p" color="secondary" className="truncate text-sm">
+                      <Text
+                        as="p"
+                        color="secondary"
+                        className="truncate text-sm"
+                      >
                         {book.book.author}
                       </Text>
                     )}
                   </div>
-                  <Text as="span" color="secondary" className="shrink-0 text-sm">
+                  <Text
+                    as="span"
+                    color="secondary"
+                    className="shrink-0 text-sm"
+                  >
                     {count} {count === 1 ? "word" : "words"}
                   </Text>
                 </Link>
@@ -233,10 +236,7 @@ export default function Flashcards() {
           {filterOptions.map((opt) => {
             if (opt.id === "divider") {
               return (
-                <span
-                  key="divider"
-                  className="text-[var(--secondary-text)]"
-                >
+                <span key="divider" className="text-[var(--secondary-text)]">
                   ───
                 </span>
               );
