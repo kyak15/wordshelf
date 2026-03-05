@@ -245,7 +245,7 @@ export default function Flashcards() {
               </Text>
             </div>
           ) : (
-            <ul className="flex flex-col gap-0.5">
+            <ul className="flex flex-col gap-1.5">
               {filteredAndSortedWords.map((w: SavedWordRow) => {
                 return (
                   <DetailedWordCard
