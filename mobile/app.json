@@ -2,7 +2,7 @@
   "expo": {
     "name": "WordVault",
     "slug": "WordVault",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "com.kyak15.wordshelf",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
