@@ -18,7 +18,7 @@ export interface MasteryLevelWithCount extends MasteryLevel {
 }
 
 export function getMasteryLevelCounts(
-  words: SavedWordRow[] | undefined
+  words: SavedWordRow[] | undefined,
 ): MasteryLevelWithCount[] {
   return MASTERY_LEVELS.map((level) => ({
     ...level,
@@ -26,14 +26,17 @@ export function getMasteryLevelCounts(
       words?.filter((w) =>
         level.level === 3
           ? w.mastery_level >= 3
-          : w.mastery_level === level.level
+          : w.mastery_level === level.level,
       ).length ?? 0,
   }));
 }
 
-export function getMasteryInfo(level: number): { color: string; label: string } {
+export function getMasteryInfo(level: number): {
+  color: string;
+  label: string;
+} {
   const found = MASTERY_LEVELS.find((m) =>
-    m.level === 3 ? level >= 3 : m.level === level
+    m.level === 3 ? level >= 3 : m.level === level,
   );
   return found ?? { color: "#9E9E9E", label: "Unknown" };
 }

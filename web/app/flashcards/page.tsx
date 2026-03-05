@@ -1,45 +1,95 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useWords } from "shared/hooks/queries/useWords";
 import { useLibraryBooks } from "shared/hooks/queries/useLibrary";
 import { useDueWords } from "shared/hooks/queries/useWords";
+import { useStreak } from "shared/hooks/queries/useStats";
 import {
   getMasteryLevelCounts,
-  getMasteryInfo,
   MASTERY_LEVELS,
 } from "shared/constants/mastery";
 import type { SavedWordRow } from "shared/types";
-import type { LibraryBookWithDetails } from "shared/types";
 import Text from "../components/atoms/Text";
 import LoadingSpinner from "../components/atoms/LoadingSpinner";
-import BookThumbnail from "../components/atoms/BookThumbnail";
+import BookShelf from "../components/molecules/BookShelf";
+import DetailedWordCard from "../components/molecules/DetailedWordCard";
+import FilterButton from "../components/atoms/FilterButton";
+import DropDownFilter from "../components/atoms/DropDownFilter";
+import CardsDueBanner from "../components/molecules/CardsDueBanner";
 
 const FILTER_ALL = "all";
 const FILTER_MASTERY_PREFIX = "mastery_";
 const FILTER_BOOK_PREFIX = "book_";
 
-type FilterId = string;
+type SortOption = "due_soon" | "recently_added" | "az" | "mastery";
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "due_soon", label: "Due soon" },
+  { value: "recently_added", label: "Recently added" },
+  { value: "az", label: "A–Z" },
+  { value: "mastery", label: "Mastery" },
+];
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <Text as="div" color="primary" className="mb-2 text-lg font-semibold">
-      {title}
-    </Text>
-  );
+function sortWords(list: SavedWordRow[], sort: SortOption): SavedWordRow[] {
+  const copy = [...list];
+  switch (sort) {
+    case "due_soon":
+      return copy.sort((a, b) => {
+        const aDue = a.next_review_at
+          ? new Date(a.next_review_at).getTime()
+          : 0;
+        const bDue = b.next_review_at
+          ? new Date(b.next_review_at).getTime()
+          : 0;
+        return aDue - bDue;
+      });
+    case "recently_added":
+      return copy.sort(
+        (a, b) =>
+          new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime(),
+      );
+    case "az":
+      return copy.sort((a, b) => a.text.localeCompare(b.text));
+    case "mastery":
+      return copy.sort((a, b) => a.mastery_level - b.mastery_level);
+    default:
+      return copy;
+  }
 }
 
 export default function Flashcards() {
   const { data: words, isLoading: wordsLoading } = useWords();
   const { data: books, isLoading: booksLoading } = useLibraryBooks();
   const { data: dueWords } = useDueWords();
+  const { data: streakData } = useStreak();
 
-  const [activeFilter, setActiveFilter] = useState<FilterId>(FILTER_ALL);
+  const [wordSearch, setWordSearch] = useState("");
+  const [bookSearch, setBookSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>(FILTER_ALL);
+  const [bookFilter, setBookFilter] = useState<string>(FILTER_ALL);
+  const [sort, setSort] = useState<SortOption>("recently_added");
 
   const isLoading = wordsLoading || booksLoading;
 
   const masteryLevels = useMemo(() => getMasteryLevelCounts(words), [words]);
+
+  const statusFilterOptions = useMemo(() => {
+    const totalWords = words?.length ?? 0;
+    return [
+      {
+        id: FILTER_ALL,
+        label: "All",
+        count: totalWords,
+        color: null as string | null,
+      },
+      ...masteryLevels.map((m) => ({
+        id: `${FILTER_MASTERY_PREFIX}${m.level}`,
+        label: m.label,
+        count: m.count,
+        color: m.color,
+      })),
+    ];
+  }, [words?.length, masteryLevels]);
 
   const wordCountsByBook = useMemo(() => {
     if (!words?.length) return {} as Record<string, number>;
@@ -49,51 +99,56 @@ export default function Flashcards() {
     }, {});
   }, [words]);
 
-  const filterOptions: { id: FilterId; label: string }[] = useMemo(() => {
-    const opts: { id: FilterId; label: string }[] = [
-      { id: FILTER_ALL, label: "All Words" },
-      ...MASTERY_LEVELS.map((m) => ({
-        id: `${FILTER_MASTERY_PREFIX}${m.level}` as FilterId,
-        label: m.label,
-      })),
-    ];
-    if (books?.length) {
-      opts.push({ id: "divider", label: "───" });
-      books.forEach((b: LibraryBookWithDetails) => {
-        const count = wordCountsByBook[b.library_book_id] ?? 0;
-        if (count > 0) {
-          opts.push({
-            id: `${FILTER_BOOK_PREFIX}${b.library_book_id}`,
-            label: b.book?.title ?? "Unknown",
-          });
-        }
-      });
-    }
-    return opts;
-  }, [books, wordCountsByBook]);
-
-  const filteredWords = useMemo(() => {
-    if (!words) return [];
-    if (activeFilter === FILTER_ALL) return words;
-    if (activeFilter.startsWith(FILTER_MASTERY_PREFIX)) {
-      const level = Number(activeFilter.replace(FILTER_MASTERY_PREFIX, ""));
-      return words.filter((w) =>
-        level === 3 ? w.mastery_level >= 3 : w.mastery_level === level,
-      );
-    }
-    if (activeFilter.startsWith(FILTER_BOOK_PREFIX)) {
-      const bookId = activeFilter.replace(FILTER_BOOK_PREFIX, "");
-      return words.filter((w) => w.library_book_id === bookId);
-    }
-    return words;
-  }, [words, activeFilter]);
-
   const wordsDueCount =
     dueWords?.filter(
       (w) =>
         !w.is_archived &&
         (w.next_review_at == null || new Date(w.next_review_at) <= new Date()),
     ).length ?? 0;
+
+  const streak = streakData?.currentStreak ?? 0;
+
+  const booksWithWords =
+    books?.filter((b) => (wordCountsByBook[b.library_book_id] ?? 0) > 0) ?? [];
+  const filteredBooks = useMemo(() => {
+    if (!bookSearch.trim()) return booksWithWords;
+    const q = bookSearch.toLowerCase().trim();
+    return booksWithWords.filter(
+      (b) =>
+        b.book?.title?.toLowerCase().includes(q) ||
+        b.book?.author?.toLowerCase().includes(q),
+    );
+  }, [booksWithWords, bookSearch]);
+
+  const filteredAndSortedWords = useMemo(() => {
+    if (!words) return [];
+    let list = words;
+
+    if (statusFilter !== FILTER_ALL) {
+      if (statusFilter.startsWith(FILTER_MASTERY_PREFIX)) {
+        const level = Number(statusFilter.replace(FILTER_MASTERY_PREFIX, ""));
+        list = list.filter((w) =>
+          level === 3 ? w.mastery_level >= 3 : w.mastery_level === level,
+        );
+      }
+    }
+    if (
+      bookFilter !== FILTER_ALL &&
+      bookFilter.startsWith(FILTER_BOOK_PREFIX)
+    ) {
+      const bookId = bookFilter.replace(FILTER_BOOK_PREFIX, "");
+      list = list.filter((w) => w.library_book_id === bookId);
+    }
+    if (wordSearch.trim()) {
+      const q = wordSearch.toLowerCase().trim();
+      list = list.filter(
+        (w) =>
+          w.text.toLowerCase().includes(q) ||
+          (w.saved_definition?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    return sortWords(list, sort);
+  }, [words, statusFilter, bookFilter, wordSearch, sort]);
 
   if (isLoading) {
     return (
@@ -107,193 +162,113 @@ export default function Flashcards() {
   if (totalWords === 0) {
     return (
       <div className="flex flex-col gap-6 p-4">
-        <div className="text-xl font-semibold text-[var(--primary-text)]">
+        <h1 className="text-xl font-semibold text-[var(--primary-text)]">
           Flashcards
-        </div>
+        </h1>
+
         <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--divider)] bg-[var(--surface)] p-8 text-center">
-          <Text as="p" color="primary" className="mb-2 text-lg font-medium">
-            No words yet!
+          <Text as="p" color="primary" className="mb-1 font-medium">
+            Add your first word
           </Text>
-          <Text as="p" color="secondary">
-            Start building your vocabulary by adding words from your books.
+          <Text as="p" color="secondary" className="text-sm">
+            Save words from your books to build your vocabulary and review them
+            here.
           </Text>
         </div>
       </div>
     );
   }
 
-  const booksWithWords =
-    books?.filter((b) => (wordCountsByBook[b.library_book_id] ?? 0) > 0) ?? [];
-
   return (
-    <div className="flex flex-col gap-6 p-4 pb-8">
-      <div className="text-xl font-semibold text-[var(--primary-text)]">
+    <div className="flex flex-col gap-4 p-4 pb-8">
+      <h1 className="text-xl font-semibold text-[var(--primary-text)]">
         Flashcards
-      </div>
+      </h1>
 
       {wordsDueCount > 0 && (
-        <section className="rounded-2xl border border-[var(--accent)] bg-[var(--surface)] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Text as="p" color="primary" className="font-medium">
-              {wordsDueCount} {wordsDueCount === 1 ? "word" : "words"} due for
-              review
-            </Text>
-            <Link
-              href="/flashcards/review"
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary-text)] hover:opacity-90"
-            >
-              Start review
-            </Link>
-          </div>
-        </section>
+        <CardsDueBanner wordsDueCount={wordsDueCount} streak={streak} />
       )}
 
-      <section>
-        <SectionHeader title="Words by Mastery" />
-        <div className="flex flex-col gap-2">
-          {masteryLevels.map((item) => (
-            <button
-              key={item.level}
-              type="button"
-              onClick={() =>
-                setActiveFilter(`${FILTER_MASTERY_PREFIX}${item.level}`)
-              }
-              className="flex items-center justify-between rounded-xl border border-[var(--divider)] bg-[var(--surface)] px-4 py-3 text-left transition hover:opacity-90"
-            >
-              <div className="flex items-center gap-3">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                <Text as="span" color="primary" className="font-medium">
-                  {item.label}
-                </Text>
-              </div>
-              <div className="flex items-center gap-2">
-                <Text as="span" color="primary" className="font-semibold">
-                  {item.count}
-                </Text>
-                <Text as="span" color="secondary" className="text-sm">
-                  {item.count === 1 ? "word" : "words"}
-                </Text>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {booksWithWords.length > 0 && (
-        <section>
-          <SectionHeader title="Words by Book" />
-          <div className="flex flex-col gap-3">
-            {booksWithWords.map((book) => {
-              const count = wordCountsByBook[book.library_book_id] ?? 0;
-              return (
-                <Link
-                  key={book.library_book_id}
-                  href={`/book/${book.library_book_id}`}
-                  className="flex items-center gap-4 rounded-xl border border-[var(--divider)] bg-[var(--surface)] p-3 transition hover:opacity-90"
-                >
-                  <BookThumbnail
-                    uri={book.book?.cover_image_url ?? null}
-                    size="small"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <Text
-                      as="p"
-                      color="primary"
-                      className="truncate font-medium"
-                    >
-                      {book.book?.title ?? "Unknown"}
-                    </Text>
-                    {book.book?.author && (
-                      <Text
-                        as="p"
-                        color="secondary"
-                        className="truncate text-sm"
-                      >
-                        {book.book.author}
-                      </Text>
-                    )}
-                  </div>
-                  <Text
-                    as="span"
-                    color="secondary"
-                    className="shrink-0 text-sm"
-                  >
-                    {count} {count === 1 ? "word" : "words"}
-                  </Text>
-                </Link>
-              );
-            })}
+      {/* Row 2: Words (70%) + Books (30%) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+        <section className="flex min-w-0 flex-col">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <input
+              type="search"
+              placeholder="Search words…"
+              value={wordSearch}
+              onChange={(e) => setWordSearch(e.target.value)}
+              className="min-w-[140px] flex-1 rounded-lg border border-[var(--divider)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--primary-text)] placeholder:text-[var(--secondary-text)] focus:border-[var(--accent)] focus:outline-none"
+            />
+            <DropDownFilter
+              value={sort}
+              setValue={(v) => setSort(v as SortOption)}
+              options={SORT_OPTIONS}
+              className="relative"
+            />
           </div>
-        </section>
-      )}
 
-      <section>
-        <SectionHeader title="All saved words" />
-        <div className="mb-3 flex flex-wrap gap-2">
-          {filterOptions.map((opt) => {
-            if (opt.id === "divider") {
-              return (
-                <span key="divider" className="text-[var(--secondary-text)]">
-                  ───
-                </span>
-              );
-            }
-            const isActive = activeFilter === opt.id;
-            return (
-              <button
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {statusFilterOptions.map((opt) => (
+              <FilterButton
                 key={opt.id}
-                type="button"
-                onClick={() => setActiveFilter(opt.id)}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-[var(--accent)] text-[var(--primary-text)]"
-                    : "bg-[var(--surface)] text-[var(--secondary-text)] hover:bg-[var(--divider)]"
-                }`}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
-        {filteredWords.length === 0 ? (
-          <div className="rounded-2xl border border-[var(--divider)] bg-[var(--surface)] p-6 text-center">
-            <Text as="p" color="secondary">
-              No words match this filter. Try another.
-            </Text>
+                id={opt.id}
+                label={opt.label}
+                count={opt.count}
+                color={opt.color}
+                isActive={statusFilter === opt.id}
+                setStatusFilter={setStatusFilter}
+              />
+            ))}
+            <DropDownFilter
+              value={bookFilter}
+              setValue={setBookFilter}
+              allOptionValue={FILTER_ALL}
+              allOptionLabel="Book: All"
+              options={booksWithWords.map((b) => ({
+                value: `${FILTER_BOOK_PREFIX}${b.library_book_id}`,
+                label: b.book?.title ?? "Unknown",
+              }))}
+            />
           </div>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {filteredWords.map((w: SavedWordRow) => {
-              const mastery = getMasteryInfo(w.mastery_level);
-              return (
-                <li
-                  key={w.saved_word_id}
-                  className="flex items-start gap-2 rounded-lg border border-[var(--divider)] bg-[var(--surface)] px-3 py-2"
-                >
-                  <span
-                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: mastery.color }}
-                    title={mastery.label}
+
+          {filteredAndSortedWords.length === 0 ? (
+            <div className="rounded-xl border border-[var(--divider)] bg-[var(--surface)] p-6 text-center">
+              <Text as="p" color="secondary" className="text-sm">
+                {wordSearch
+                  ? "No words match your search."
+                  : statusFilter !== FILTER_ALL
+                    ? `No "${MASTERY_LEVELS[Number(statusFilter.replace(FILTER_MASTERY_PREFIX, ""))]?.label ?? statusFilter}" words yet.`
+                    : bookFilter !== FILTER_ALL
+                      ? "No words in this book."
+                      : "No words yet."}
+              </Text>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-0.5">
+              {filteredAndSortedWords.map((w: SavedWordRow) => {
+                return (
+                  <DetailedWordCard
+                    key={w.saved_word_id}
+                    saved_word_id={w.saved_word_id}
+                    text={w.text}
+                    saved_definition={w.saved_definition}
+                    saved_part_of_speech={w.saved_part_of_speech}
+                    mastery_level={w.mastery_level}
                   />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-[var(--primary-text)]">
-                      {w.text}
-                    </p>
-                    {w.saved_definition && (
-                      <p className="mt-0.5 line-clamp-2 text-sm text-[var(--secondary-text)]">
-                        {w.saved_definition}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <BookShelf
+          bookSearch={bookSearch}
+          setBookSearch={setBookSearch}
+          filteredBooks={filteredBooks}
+          wordCountsByBook={wordCountsByBook}
+        />
+      </div>
     </div>
   );
 }
