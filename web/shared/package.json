@@ -14,6 +14,7 @@
     "./hooks/queries/useWords": "./hooks/queries/useWords.ts",
     "./hooks/queries/useStats": "./hooks/queries/useStats.ts",
     "./hooks/queries/useLibrary": "./hooks/queries/useLibrary.ts",
-    "./types": "./types/index.ts"
+    "./types": "./types/index.ts",
+    "./constants/mastery": "./constants/mastery.ts"
   }
 }
